@@ -100,9 +100,16 @@ public class NeuralNet extends SupervisedLearner {
 
   /// Train this supervised learner
   void train(Matrix features, Matrix labels) {
-    for(int i = 0; i < layers.size(); ++i) {
+    // double[] trainingIndices =  new double[features.rows()];
+    // double[] testIndices = new double[]
+
+    Vec in;
+    for(int i = 0; i < features.rows(); ++i) {
+      in = features.row(i);
       //layers.get(i).ordinary_least_squares(features, labels, weights);
     }
+
+
   }
 
 

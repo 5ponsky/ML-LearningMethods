@@ -15,6 +15,12 @@ abstract class SupervisedLearner
 	/// Make a prediction
 	abstract Vec predict(Vec in);
 
+	/// Splits into training/testing, training = total * splitRatio
+	void splitData(Matrix featureData, Matrix labelData, Matrix training, Matrix testing, double splitRatio) {
+		//int trainingSize = (int)(data.rows() * splitRatio);
+
+	}
+
 	/// Measures the misclassifications with the provided test data
 	int countMisclassifications(Matrix features, Matrix labels) {
 		if(features.rows() != labels.rows())
@@ -140,5 +146,22 @@ abstract class SupervisedLearner
 
 		rmse = Math.sqrt(mse/repititions);
 		return rmse;
+	}
+
+	void scrambleIndices(Random random, int[] trainingIndices, int[] testIndices) {
+		for(int i = 0; i < trainingIndices.length * 0.5; ++i) {
+			int randomIndex = random.nextInt(trainingIndices.length);
+			int temp = trainingIndices[i];
+			trainingIndices[i] = trainingIndices[randomIndex];
+			trainingIndices[randomIndex] = temp;
+
+		}
+
+		for(int i = 0; i < testIndices.length * 0.5; ++i) {
+			int randomIndex = random.nextInt(testIndices.length);
+			int temp = testIndices[i];
+			testIndices[i] = testIndices[randomIndex];
+			testIndices[randomIndex] = temp;
+		}
 	}
 }
