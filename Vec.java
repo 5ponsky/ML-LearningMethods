@@ -165,6 +165,11 @@ public class Vec {
 		this.vals[maxIndex] = 1.0;
 	}
 
+	// public void oneHotLabel() {
+	// 	target = new Vec(10);
+	// 	target.vals[(int) trainLabels.row(i).get(0)] = 1;
+	// }
+
 	public void addScaled(double scalar, Vec that) {
 		if(that.size() != this.size())
 			throw new IllegalArgumentException("mismatching sizes");

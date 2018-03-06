@@ -16,9 +16,45 @@ abstract class SupervisedLearner
 	abstract Vec predict(Vec in);
 
 	/// Splits into training/testing, training = total * splitRatio
-	void splitData(Matrix featureData, Matrix labelData, Matrix training, Matrix testing, double splitRatio) {
-		//int trainingSize = (int)(data.rows() * splitRatio);
+	void splitData(Matrix featureData, Matrix labelData, Matrix trainingFeatures, Matrix trainingLabels,
+		Matrix testingFeatures, Matrix testingLabels, double splitRatio) {
 
+		int trainingSize = (int)(featureData.rows() * splitRatio);
+
+		/// Get the training set
+		trainingFeatures = new Matrix(trainingSize, featureData.cols());
+		trainingLabels = new Matrix(trainingSize, labelData.cols());
+		for(int i = 0; i < trainingSize; ++i) {
+			for(int j = 0; j < featureData.cols(); ++j) {
+				double newEntry = featureData.row(i).get(j);
+				trainingFeatures.row(i).set(j, newEntry);
+			}
+
+			for(int j = 0; j < labelData.cols(); ++j) {
+				double newEntry = labelData.row(i).get(j);
+				trainingLabels.row(i).set(j, newEntry);
+			}
+		}
+
+		testingFeatures = new Matrix(featureData.rows() - trainingSize, featureData.cols());
+		testingLabels = new Matrix(labelData.rows() - trainingSize, labelData.cols());
+		for(int i = trainingSize; i < featureData.rows(); ++i) {
+			int i_adjusted = i - trainingSize;
+			for(int j = 0; j < featureData.cols(); ++j) {
+				double newEntry = featureData.row(i).get(j);
+				testingFeatures.row(i_adjusted).set(j, newEntry); // fix i
+			}
+
+			for(int j = 0; j < labelData.cols(); ++j) {
+				double newEntry = labelData.row(i).get(j);
+				testingLabels.row(i_adjusted).set(j, newEntry); // fix i
+			}
+		}
+
+	}
+
+	void convergence() {
+		
 	}
 
 	/// Measures the misclassifications with the provided test data

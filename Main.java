@@ -180,7 +180,7 @@ class Main
 				target = new Vec(10);
 				target.vals[(int) trainLabels.row(i).get(0)] = 1;
 
-				nn.refineWeights(in, target, nn.weights, 0.0175);
+				//nn.refineWeights(in, target, nn.weights, 0.0175, Training.STOCHASTIC);
 			}
 
 			// Shuffle training and testing indices

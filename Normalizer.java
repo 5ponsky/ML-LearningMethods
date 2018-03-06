@@ -13,25 +13,22 @@ public class Normalizer extends PreprocessingOperation
 
 	/// Creates a new Normalizer instance
 	public Normalizer() {}
-	
+
 	/// Computers the min and max of each column
 	@Override
-	public void train(Matrix data) 
-	{
+	public void train(Matrix data) {
 		m_template.copyMetaData(data);
 		m_inputMins = new double[data.cols()];
 		m_inputMaxs = new double[data.cols()];
-		
-		for(int i = 0; i < data.cols(); i++)
-		{
-			if(data.valueCount(i) == 0)
-			{
+
+		for(int i = 0; i < data.cols(); i++) {
+			if(data.valueCount(i) == 0) {
+
 				// Compute the min and max
 				m_inputMins[i] = data.columnMin(i);
 				m_inputMaxs[i] = Math.max(m_inputMins[i] + 1e-9, data.columnMax(i));
-			}
-			else
-			{
+			} else {
+
 				// Don't do nominal attributes
 				m_inputMins[i] = Matrix.UNKNOWN_VALUE;
 				m_inputMaxs[i] = Matrix.UNKNOWN_VALUE;
@@ -45,19 +42,16 @@ public class Normalizer extends PreprocessingOperation
 
 	/// Normalize continuous features.
 	@Override
-	public void transform(double[] in, double[] out)
-	{
+	public void transform(double[] in, double[] out) {
 		if(m_inputMins == null)
 			throw new RuntimeException("Tried to use a Normalizer transform that had not been trained");
 		if(in.length != m_inputMins.length)
 			throw new RuntimeException("Normalizer.transform received unexpected in-vector size. Expected " + m_inputMins.length + ", got " + in.length);
 
-		for(int c = 0; c < in.length; c++)
-		{
+		for(int c = 0; c < in.length; c++) {
 			if(m_inputMins[c] == Matrix.UNKNOWN_VALUE) // if the attribute is nominal...
 				out[c] = in[c];
-			else
-			{
+			else {
 				if(in[c] == Matrix.UNKNOWN_VALUE)
 					out[c] = Matrix.UNKNOWN_VALUE;
 				else
@@ -68,19 +62,16 @@ public class Normalizer extends PreprocessingOperation
 
 	/// De-normalize continuous values.
 	@Override
-	public void untransform(double[] in, double[] out)
-	{
+	public void untransform(double[] in, double[] out) {
 		if(m_inputMins == null)
 			throw new RuntimeException("Tried to use a Normalizer transform that had not been trained");
 		if(in.length != m_inputMins.length)
 			throw new RuntimeException("Normalizer.untransform received unexpected in-vector size. Expected " + m_inputMins.length + ", got " + in.length);
 
-		for(int c = 0; c < in.length; c++)
-		{
+		for(int c = 0; c < in.length; c++) {
 			if(m_inputMins[c] == Matrix.UNKNOWN_VALUE) // if the attribute is nominal...
 				out[c] = in[c];
-			else
-			{
+			else {
 				if(in[c] == Matrix.UNKNOWN_VALUE)
 					out[c] = Matrix.UNKNOWN_VALUE;
 				else

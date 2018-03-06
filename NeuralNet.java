@@ -5,6 +5,7 @@ public class NeuralNet extends SupervisedLearner {
   protected Vec weights;
   protected Vec gradient;
   protected ArrayList<Layer> layers;
+  protected Random random;
 
   String name() { return ""; }
 
@@ -13,6 +14,7 @@ public class NeuralNet extends SupervisedLearner {
   }
 
   void initWeights(Random r) {
+    random = r;
 
     // Calculate the total number of weights
     int weightsSize = 0;
@@ -68,19 +70,28 @@ public class NeuralNet extends SupervisedLearner {
     }
   }
 
-  void refineWeights(Vec x, Vec y, Vec weights, double learning_rate) {
-    gradient.fill(0.0);
+  // void refineWeights(Vec x, Vec y, Vec weights, double learning_rate, Training type) {
+  //
+  //   if(Training.STOCHASTIC == type) {
+  //     gradient.fill(0.0);
+  //   } else if(Training.MOMENTUM == type) {
+  //     gradient.scale(0.9);
+  //   }
+  //
+  //   predict(x);
+  //
+  //   // Compute the blame on each layer
+  //   backProp(y);
+  //
+  //   // Compute the gradient
+  //   updateGradient(x);
+  //
+  //   // Adjust the weights per the learning_rate
+  //   this.weights.addScaled(learning_rate, gradient);
+  // }
 
-    predict(x);
-
-    // Compute the blame on each layer
-    backProp(y);
-
-    // Compute the gradient
-    updateGradient(x);
-
-    // Adjust the weights per the learning_rate
-    this.weights.addScaled(learning_rate, gradient);
+  void refineWeights(double learning_rate) {
+    weights.addScaled(learning_rate, gradient);
   }
 
   Vec predict(Vec in) {
@@ -99,23 +110,89 @@ public class NeuralNet extends SupervisedLearner {
 
   /// Train this supervised learner
   void train(Matrix features, Matrix labels, Training type) {
-    // double[] trainingIndices =  new double[features.rows()];
+    int batch_size = 10;
+    int[] trainingIndices =  new int[features.rows()];
     // double[] testIndices = new double[]
 
-    if(type == Training.STOCHASTIC) {
-      Vec in;
+    if(Training.STOCHASTIC == type) {
+      /// Update weights every training pattern
+
+      Vec in, target;
       for(int i = 0; i < features.rows(); ++i) {
-        in = features.row(i);
-        //layers.get(i).ordinary_least_squares(features, labels, weights);
+        gradient.fill(0.0);
+        in = features.row(trainingIndices[i]);
+
+        target = new Vec(10);
+        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+
+        predict(in);
+        backProp(target);
+        updateGradient(in);
+        refineWeights(0.0175);
       }
-    } else if(type == Training.BATCH) {
 
-    } else if(type == Training.MINIBATCH) {
+      scrambleIndices(random, trainingIndices, null);
+    } else if(Training.BATCH == type) {
+      /// Update weights after the entire training set
 
-    } else if(type == Training.MOMENTUM) {
+      Vec in, target;
+      for(int i = 0; i < features.rows(); ++i) {
+        in = features.row(trainingIndices[i]);
 
+        target = new Vec(10);
+        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+
+        predict(in);
+        backProp(target);
+        updateGradient(in);
+      }
+
+      refineWeights(0.0175);
+      gradient.fill(0.0);
+      scrambleIndices(random, trainingIndices, null);
+    } else if(Training.MINIBATCH == type) {
+      /// Update weights after batch_size of patterns
+
+      Vec in, target;
+      for(int i = 0; i < features.rows(); ++i) {
+        in = features.row(trainingIndices[i]);
+
+        target = new Vec(10);
+        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+
+        predict(in);
+        backProp(target);
+        updateGradient(in);
+
+        if(i % batch_size == 0) {
+          refineWeights(0.0175);
+          gradient.fill(0.0);
+          scrambleIndices(random, trainingIndices, null);
+        }
+      }
+
+      refineWeights(0.0175);
+      gradient.fill(0.0);
+      scrambleIndices(random, trainingIndices, null);
+    } else if(Training.MOMENTUM == type) {
+      /// Update weights after every pattern, scaling gradient by 0.9
+
+      Vec in, target;
+      gradient.fill(0.0);
+      for(int i = 0; i < features.rows(); ++i) {
+        in = features.row(trainingIndices[i]);
+
+        target = new Vec(10);
+        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+
+        predict(in);
+        backProp(target);
+        updateGradient(in);
+        refineWeights(0.0175);
+        gradient.scale(0.9);
+      }
     } else {
-      throw new IllegalArgumentException("No usable training method");
+      throw new IllegalArgumentException("No usable training method given: " + type);
     }
 
 
