@@ -15,7 +15,7 @@ class Main
 		trainLabels.loadARFF(fn + "_train_lab.arff");
 
 		// Train the model
-		learner.train(trainFeatures, trainLabels);
+		//learner.train(trainFeatures, trainLabels, Training.NONE);
 
 		// Load the test data
 		Matrix testFeatures = new Matrix();

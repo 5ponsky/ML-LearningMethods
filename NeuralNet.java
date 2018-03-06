@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-
 public class NeuralNet extends SupervisedLearner {
   protected Vec weights;
   protected Vec gradient;
@@ -99,14 +98,24 @@ public class NeuralNet extends SupervisedLearner {
   }
 
   /// Train this supervised learner
-  void train(Matrix features, Matrix labels) {
+  void train(Matrix features, Matrix labels, Training type) {
     // double[] trainingIndices =  new double[features.rows()];
     // double[] testIndices = new double[]
 
-    Vec in;
-    for(int i = 0; i < features.rows(); ++i) {
-      in = features.row(i);
-      //layers.get(i).ordinary_least_squares(features, labels, weights);
+    if(type == Training.STOCHASTIC) {
+      Vec in;
+      for(int i = 0; i < features.rows(); ++i) {
+        in = features.row(i);
+        //layers.get(i).ordinary_least_squares(features, labels, weights);
+      }
+    } else if(type == Training.BATCH) {
+
+    } else if(type == Training.MINIBATCH) {
+
+    } else if(type == Training.MOMENTUM) {
+
+    } else {
+      throw new IllegalArgumentException("No usable training method");
     }
 
 
