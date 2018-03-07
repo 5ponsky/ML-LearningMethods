@@ -231,11 +231,37 @@ class Main
 		System.out.println(g);
 	}
 
+	public static void testNomCat() {
+		Matrix data = new Matrix();
+		data.loadARFF("data/hypothyroid.arff");
+
+		Matrix sample = new Matrix(0, data.cols());
+		sample.takeRow(data.row(0).vals());
+		sample.takeRow(data.row(1).vals());
+		sample.takeRow(data.row(2).vals());
+		sample.takeRow(data.row(3).vals());
+
+
+
+		NomCat nm = new NomCat();
+		nm.train(sample);
+		Matrix transformed = nm.outputTemplate();
+
+		for(int i = 0; i < sample.rows(); ++i) {
+			double[] temp = sample.row(i).vals();
+			double[] out = new double[transformed.cols()];
+			nm.transform(temp, out);
+			transformed.takeRow(out);
+		}
+
+		System.out.println(sample);
+		System.out.println("----------------------------------------");
+		System.out.println(transformed);
+	}
+
 	public static void main(String[] args)
 	{
-		// Here is a comment
-
-		System.out.println("Obtained 338 Misclassifications in 9 EPOCHS");
+		testNomCat();
 
 	}
 }

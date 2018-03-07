@@ -13,7 +13,7 @@ public class Vec {
 	protected int len;
 
 	public int size() { return len; }
-	public double[] data() { return vals; }
+	public double[] vals() { return vals; }
 	public double get(int index) { return vals[start + index]; }
 	public void set(int index, double value) {
 		//if(start + index > len)

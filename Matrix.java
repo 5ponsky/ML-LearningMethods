@@ -141,7 +141,9 @@ public class Matrix
 					Json.StringParser sp = new Json.StringParser(line);
 					sp.advance(10);
 					sp.skipWhitespace();
-					String attrName = sp.untilWhitespace();
+					sp.advance(1);
+					String attrName = sp.until('\'');
+					sp.advance(1);
 					m_attr_name.add(attrName);
 					sp.skipWhitespace();
 					int valCount = 0;
@@ -513,7 +515,7 @@ public class Matrix
 	public void takeRow(Vec row) {
 		if(row.size() != cols())
 			throw new IllegalArgumentException("Vector differs from columns size");
-		m_data.add(row.data());
+		m_data.add(row.vals());
 	}
 
 
