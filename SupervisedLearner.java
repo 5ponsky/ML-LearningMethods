@@ -15,15 +15,36 @@ abstract class SupervisedLearner
 	/// Make a prediction
 	abstract Vec predict(Vec in);
 
+	/// If the data patterns are merged with the labels seperate them
+	void splitLabels(Matrix data, Matrix features, Matrix labels) {
+		// copy the features over
+		features.setSize(data.rows(), data.cols()-1);
+		for(int i = 0; i < data.rows(); ++i) {
+			for(int j = 0; j < data.cols()-1; ++j) {
+				double entry = data.row(i).get(j);
+				features.row(i).set(j, entry);
+			}
+		}
+
+		// This assumes labels are a vector
+		labels.setSize(data.rows(), 1);
+		for(int i = 0; i < data.rows(); ++i) {
+			double label = data.row(i).get(data.cols()-1);
+			labels.row(i).set(0, label);
+		}
+
+	}
+
 	/// Splits into training/testing, training = total * splitRatio
 	void splitData(Matrix featureData, Matrix labelData, Matrix trainingFeatures, Matrix trainingLabels,
 		Matrix testingFeatures, Matrix testingLabels, double splitRatio) {
 
 		int trainingSize = (int)(featureData.rows() * splitRatio);
+		System.out.println("trainignsize: " + featureData.rows());
 
-		/// Get the training set
-		trainingFeatures = new Matrix(trainingSize, featureData.cols());
-		trainingLabels = new Matrix(trainingSize, labelData.cols());
+		// copy the training set
+		trainingFeatures.setSize(trainingSize, featureData.cols());
+		trainingLabels.setSize(trainingSize, labelData.cols());
 		for(int i = 0; i < trainingSize; ++i) {
 			for(int j = 0; j < featureData.cols(); ++j) {
 				double newEntry = featureData.row(i).get(j);
@@ -36,8 +57,9 @@ abstract class SupervisedLearner
 			}
 		}
 
-		testingFeatures = new Matrix(featureData.rows() - trainingSize, featureData.cols());
-		testingLabels = new Matrix(labelData.rows() - trainingSize, labelData.cols());
+		// copy the test set
+		testingFeatures.setSize(featureData.rows() - trainingSize, featureData.cols());
+		testingLabels.setSize(labelData.rows() - trainingSize, labelData.cols());
 		for(int i = trainingSize; i < featureData.rows(); ++i) {
 			int i_adjusted = i - trainingSize;
 			for(int j = 0; j < featureData.cols(); ++j) {
@@ -53,8 +75,9 @@ abstract class SupervisedLearner
 
 	}
 
+
 	void convergence() {
-		
+
 	}
 
 	/// Measures the misclassifications with the provided test data
