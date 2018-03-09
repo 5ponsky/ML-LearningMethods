@@ -9,13 +9,12 @@ public class NeuralNet extends SupervisedLearner {
 
   String name() { return ""; }
 
-  NeuralNet() {
+  NeuralNet(Random r) {
     layers = new ArrayList<Layer>();
+    random = r;
   }
 
-  void initWeights(Random r) {
-    random = r;
-
+  void initWeights() {
     // Calculate the total number of weights
     int weightsSize = 0;
     for(int i = 0; i < layers.size(); ++i) {
@@ -32,7 +31,7 @@ public class NeuralNet extends SupervisedLearner {
       int weightsChunk = l.getNumberWeights();
       Vec w = new Vec(weights, pos, weightsChunk);
 
-      l.initWeights(w, r);
+      l.initWeights(w, random);
 
       pos += weightsChunk;
     }
@@ -108,95 +107,121 @@ public class NeuralNet extends SupervisedLearner {
     return (layers.get(layers.size()-1).activation);
   }
 
-  /// Train this supervised learner
-  void train(Matrix features, Matrix labels, Training type) {
-    int batch_size = 10;
-    int[] trainingIndices =  new int[features.rows()];
-    // double[] testIndices = new double[]
+  void train(Matrix features, Matrix labels, int batch_size, double momentum) {
+    if(batch_size < 1)
+      throw new IllegalArgumentException("Batch Size is invalid!");
 
-    if(Training.STOCHASTIC == type) {
-      /// Update weights every training pattern
+    // get the set of indices
+    int[] trainingIndices = new int[features.rows()];
 
-      Vec in, target;
-      for(int i = 0; i < features.rows(); ++i) {
-        gradient.fill(0.0);
-        in = features.row(trainingIndices[i]);
+    Vec in, target;
+    for(int i = 0; i < features.rows(); ++i) {
+      in = features.row(trainingIndices[i]);
 
-        target = new Vec(10);
-        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+      target = new Vec(10);
+      target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
 
-        predict(in);
-        backProp(target);
-        updateGradient(in);
+      predict(in);
+      backProp(target);
+      updateGradient(in);
+
+      if(i % batch_size == 0) {
         refineWeights(0.0175);
+        gradient.scale(momentum);
+        scrambleIndices(random, trainingIndices, null);
       }
-
-      scrambleIndices(random, trainingIndices, null);
-    } else if(Training.BATCH == type) {
-      /// Update weights after the entire training set
-
-      Vec in, target;
-      for(int i = 0; i < features.rows(); ++i) {
-        in = features.row(trainingIndices[i]);
-
-        target = new Vec(10);
-        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-
-        predict(in);
-        backProp(target);
-        updateGradient(in);
-      }
-
-      refineWeights(0.0175);
-      gradient.fill(0.0);
-      scrambleIndices(random, trainingIndices, null);
-    } else if(Training.MINIBATCH == type) {
-      /// Update weights after batch_size of patterns
-
-      Vec in, target;
-      for(int i = 0; i < features.rows(); ++i) {
-        in = features.row(trainingIndices[i]);
-
-        target = new Vec(10);
-        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-
-        predict(in);
-        backProp(target);
-        updateGradient(in);
-
-        if(i % batch_size == 0) {
-          refineWeights(0.0175);
-          gradient.fill(0.0);
-          scrambleIndices(random, trainingIndices, null);
-        }
-      }
-
-      refineWeights(0.0175);
-      gradient.fill(0.0);
-      scrambleIndices(random, trainingIndices, null);
-    } else if(Training.MOMENTUM == type) {
-      /// Update weights after every pattern, scaling gradient by 0.9
-
-      Vec in, target;
-      gradient.fill(0.0);
-      for(int i = 0; i < features.rows(); ++i) {
-        in = features.row(trainingIndices[i]);
-
-        target = new Vec(10);
-        target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-
-        predict(in);
-        backProp(target);
-        updateGradient(in);
-        refineWeights(0.0175);
-        gradient.scale(0.9);
-      }
-    } else {
-      throw new IllegalArgumentException("No usable training method given: " + type);
     }
-
-
   }
+
+  /// Train this supervised learner
+  // void train(Matrix features, Matrix labels, Training type) {
+  //   int batch_size = 10;
+  //   int[] trainingIndices =  new int[features.rows()];
+  //   // double[] testIndices = new double[]
+  //
+  //   if(Training.STOCHASTIC == type) {
+  //     /// Update weights every training pattern
+  //
+  //     Vec in, target;
+  //     for(int i = 0; i < features.rows(); ++i) {
+  //       gradient.fill(0.0);
+  //       in = features.row(trainingIndices[i]);
+  //
+  //       target = new Vec(10);
+  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+  //
+  //       predict(in);
+  //       backProp(target);
+  //       updateGradient(in);
+  //       refineWeights(0.0175);
+  //     }
+  //
+  //     scrambleIndices(random, trainingIndices, null);
+  //   } else if(Training.BATCH == type) {
+  //     /// Update weights after the entire training set
+  //
+  //     Vec in, target;
+  //     for(int i = 0; i < features.rows(); ++i) {
+  //       in = features.row(trainingIndices[i]);
+  //
+  //       target = new Vec(10);
+  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+  //
+  //       predict(in);
+  //       backProp(target);
+  //       updateGradient(in);
+  //     }
+  //
+  //     refineWeights(0.0175);
+  //     gradient.fill(0.0);
+  //     scrambleIndices(random, trainingIndices, null);
+  //   } else if(Training.MINIBATCH == type) {
+  //     /// Update weights after batch_size of patterns
+  //
+  //     Vec in, target;
+  //     for(int i = 0; i < features.rows(); ++i) {
+  //       in = features.row(trainingIndices[i]);
+  //
+  //       target = new Vec(10);
+  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+  //
+  //       predict(in);
+  //       backProp(target);
+  //       updateGradient(in);
+  //
+  //       if(i % batch_size == 0) {
+  //         refineWeights(0.0175);
+  //         gradient.fill(0.0);
+  //         scrambleIndices(random, trainingIndices, null);
+  //       }
+  //     }
+  //
+  //     refineWeights(0.0175);
+  //     gradient.fill(0.0);
+  //     scrambleIndices(random, trainingIndices, null);
+  //   } else if(Training.MOMENTUM == type) {
+  //     /// Update weights after every pattern, scaling gradient by 0.9
+  //
+  //     Vec in, target;
+  //     gradient.fill(0.0);
+  //     for(int i = 0; i < features.rows(); ++i) {
+  //       in = features.row(trainingIndices[i]);
+  //
+  //       target = new Vec(10);
+  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+  //
+  //       predict(in);
+  //       backProp(target);
+  //       updateGradient(in);
+  //       refineWeights(0.0175);
+  //       gradient.scale(0.9);
+  //     }
+  //   } else {
+  //     throw new IllegalArgumentException("No usable training method given: " + type);
+  //   }
+  //
+  //
+  // }
 
 
 

@@ -1,3 +1,0 @@
-public enum Training {
-	NONE, STOCHASTIC, BATCH, MINIBATCH, MOMENTUM
-}

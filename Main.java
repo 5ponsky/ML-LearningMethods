@@ -146,7 +146,7 @@ class Main
 		for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
 
 		/// Assemble and initialize a neural net
-		NeuralNet nn = new NeuralNet();
+		NeuralNet nn = new NeuralNet(random);
 
 		nn.layers.add(new LayerLinear(784, 80));
 		nn.layers.add(new LayerTanh(80));
@@ -157,7 +157,7 @@ class Main
 		nn.layers.add(new LayerLinear(30, 10));
 		nn.layers.add(new LayerTanh(10));
 
-		nn.initWeights(random);
+		nn.initWeights();
 
 
 		/// Training and testing
@@ -232,27 +232,26 @@ class Main
 	}
 
 	public static void testNomCat() {
+		Random random = new Random(123456);
 		Matrix data = new Matrix();
 		data.loadARFF("data/hypothyroid.arff");
 
-		Matrix sample = new Matrix(0, data.cols());
-		for(int i = 0; i < 4; ++i) {
-			sample.takeRow(data.row(i).vals());
-		}
-		System.out.println(sample);
-		System.out.println("------------------------------");
+		Matrix sample = new Matrix(4, data.cols());
+		sample.copyBlock(0, 0, data, 0, 0, 4, data.cols());
 
-		Filter f = new Filter(new Imputer(), new Normalizer(), new NomCat(), new NeuralNet());
+		 System.out.println(sample);
+		 System.out.println("------------------------------");
 
+		Filter f = new Filter(new Imputer(), new Normalizer(), new NomCat(), new NeuralNet(random));
 
 		Matrix features = new Matrix();
 		Matrix labels = new Matrix();
 		f.splitLabels(sample, features, labels);
-		System.out.println(features);
-		System.out.println(labels);
-		System.out.println("------------------------------");
+		// System.out.println(features);
+		// System.out.println(labels);
+		// System.out.println("------------------------------");
 
-		double splitRatio = 0.5;
+		double splitRatio = 0.8;
 		Matrix trainingFeatures = new Matrix();
 		Matrix trainingLabels = new Matrix();
 		Matrix testingFeatures = new Matrix();
@@ -260,10 +259,12 @@ class Main
 		f.splitData(features, labels, trainingFeatures, trainingLabels,
 			testingFeatures, testingLabels, splitRatio);
 
-		System.out.println("trf: " + trainingFeatures);
-		System.out.println("trl: " + trainingLabels);
-		System.out.println("tf: " + testingFeatures);
-		System.out.println("tl: " + testingLabels);
+		// System.out.println("trf: " + trainingFeatures);
+		// System.out.println("trl: " + trainingLabels);
+		// System.out.println("tf: " + testingFeatures);
+		// System.out.println("tl: " + testingLabels);
+
+		f.train(trainingFeatures, trainingLabels, 1, 0.0);
 
 	}
 

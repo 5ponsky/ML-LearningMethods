@@ -14,13 +14,11 @@ public class Imputer extends PreprocessingOperation
 	public Imputer() {}
 
 	/// Calculates the mean or mode for each column as appropriate.
-	public void train(Matrix data)
-	{
+	public void train(Matrix data) {
 		m_centroid = new double[data.cols()];
 		m_template.copyMetaData(data);
 
-		for (int i = 0; i < data.cols(); i++)
-		{
+		for (int i = 0; i < data.cols(); i++) {
 			if (data.valueCount(i) == 0)
 				m_centroid[i] = data.columnMean(i);
 			else
@@ -35,13 +33,13 @@ public class Imputer extends PreprocessingOperation
 	public Matrix outputTemplate() { return m_template; }
 
 	/// Replaces unknown values in the input vector with the mean or mode, as appropriate.
-	public void transform(double[] in, double[] out)
-	{
+	public void transform(double[] in, double[] out) {
+		if(m_centroid == null)
+			System.out.println("null");
 		if (in.length != m_centroid.length)
 			throw new RuntimeException("Imputer.transform received unexpected in-vector size. Expected " + m_centroid.length + ", got" + in.length);
 
-		for (int i = 0; i < m_centroid.length; i++)
-		{
+		for (int i = 0; i < m_centroid.length; i++) {
 			if (in[i] == Matrix.UNKNOWN_VALUE)
 				out[i] = m_centroid[i];
 			else
@@ -50,8 +48,7 @@ public class Imputer extends PreprocessingOperation
 	}
 
 	/// Unknown values cannot be recovered, so the input vector is simply copied into the output vector.
-	public void untransform(double[] in, double[] out)
-	{
+	public void untransform(double[] in, double[] out) {
 		if (in.length != m_centroid.length)
 			throw new RuntimeException("Imputer.untransform received unexpected in-vector size. Expected " + m_centroid.length + ", got" + in.length);
 

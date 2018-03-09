@@ -10,68 +10,71 @@ abstract class SupervisedLearner
 	abstract String name();
 
 	/// Train this supervised learner
-	abstract void train(Matrix features, Matrix labels, Training type);
+	abstract void train(Matrix features, Matrix labels, int batch_size, double momentum);
 
 	/// Make a prediction
 	abstract Vec predict(Vec in);
 
 	/// If the data patterns are merged with the labels seperate them
+	// Assumes labels are vectors
 	void splitLabels(Matrix data, Matrix features, Matrix labels) {
 		// copy the features over
 		features.setSize(data.rows(), data.cols()-1);
-		for(int i = 0; i < data.rows(); ++i) {
-			for(int j = 0; j < data.cols()-1; ++j) {
-				double entry = data.row(i).get(j);
-				features.row(i).set(j, entry);
-			}
-		}
+		features.copyBlock(0, 0, data, 0, 0, data.rows(), data.cols()-1);
 
+		// Copies the labels over
 		// This assumes labels are a vector
 		labels.setSize(data.rows(), 1);
-		for(int i = 0; i < data.rows(); ++i) {
-			double label = data.row(i).get(data.cols()-1);
-			labels.row(i).set(0, label);
-		}
-
+		labels.copyBlock(0, 0, data, 0, data.rows()-1, data.rows(), 1);
 	}
 
 	/// Splits into training/testing, training = total * splitRatio
+	// Assumes that the labels are a vector
 	void splitData(Matrix featureData, Matrix labelData, Matrix trainingFeatures, Matrix trainingLabels,
 		Matrix testingFeatures, Matrix testingLabels, double splitRatio) {
 
 		int trainingSize = (int)(featureData.rows() * splitRatio);
-		System.out.println("trainignsize: " + featureData.rows());
 
 		// copy the training set
 		trainingFeatures.setSize(trainingSize, featureData.cols());
 		trainingLabels.setSize(trainingSize, labelData.cols());
-		for(int i = 0; i < trainingSize; ++i) {
-			for(int j = 0; j < featureData.cols(); ++j) {
-				double newEntry = featureData.row(i).get(j);
-				trainingFeatures.row(i).set(j, newEntry);
-			}
 
-			for(int j = 0; j < labelData.cols(); ++j) {
-				double newEntry = labelData.row(i).get(j);
-				trainingLabels.row(i).set(j, newEntry);
-			}
-		}
+		trainingFeatures.copyBlock(0, 0, featureData, 0, 0, trainingSize, featureData.cols());
+		trainingLabels.copyBlock(0, 0, labelData, 0, 0, trainingSize, labelData.cols());
+
+		// for(int i = 0; i < trainingSize; ++i) {
+		// 	for(int j = 0; j < featureData.cols(); ++j) {
+		// 		double newEntry = featureData.row(i).get(j);
+		// 		trainingFeatures.row(i).set(j, newEntry);
+		// 	}
+		//
+		// 	for(int j = 0; j < labelData.cols(); ++j) {
+		// 		double newEntry = labelData.row(i).get(j);
+		// 		trainingLabels.row(i).set(j, newEntry);
+		// 	}
+		// }
 
 		// copy the test set
 		testingFeatures.setSize(featureData.rows() - trainingSize, featureData.cols());
 		testingLabels.setSize(labelData.rows() - trainingSize, labelData.cols());
-		for(int i = trainingSize; i < featureData.rows(); ++i) {
-			int i_adjusted = i - trainingSize;
-			for(int j = 0; j < featureData.cols(); ++j) {
-				double newEntry = featureData.row(i).get(j);
-				testingFeatures.row(i_adjusted).set(j, newEntry); // fix i
-			}
 
-			for(int j = 0; j < labelData.cols(); ++j) {
-				double newEntry = labelData.row(i).get(j);
-				testingLabels.row(i_adjusted).set(j, newEntry); // fix i
-			}
-		}
+		testingFeatures.copyBlock(0, 0, featureData,
+			trainingSize, 0, featureData.rows()-trainingSize, featureData.cols());
+		testingLabels.copyBlock(0, 0, labelData,
+			trainingSize, 0, labelData.rows()-trainingSize, labelData.cols());
+
+		// for(int i = trainingSize; i < featureData.rows(); ++i) {
+		// 	int i_adjusted = i - trainingSize;
+		// 	for(int j = 0; j < featureData.cols(); ++j) {
+		// 		double newEntry = featureData.row(i).get(j);
+		// 		testingFeatures.row(i_adjusted).set(j, newEntry); // fix i
+		// 	}
+		//
+		// 	for(int j = 0; j < labelData.cols(); ++j) {
+		// 		double newEntry = labelData.row(i).get(j);
+		// 		testingLabels.row(i_adjusted).set(j, newEntry); // fix i
+		// 	}
+		// }
 
 	}
 
@@ -187,7 +190,7 @@ abstract class SupervisedLearner
 					beginIndex+1, 0, featureData.rows() - endIndex, labelData.cols());
 
 
-				train(trainFeatures, trainLabels, Training.NONE);
+				train(trainFeatures, trainLabels, 1, 0.0);
 				sse = sse + sum_squared_error(testFeatures, testLabels);
 			}
 
@@ -216,11 +219,13 @@ abstract class SupervisedLearner
 
 		}
 
-		for(int i = 0; i < testIndices.length * 0.5; ++i) {
-			int randomIndex = random.nextInt(testIndices.length);
-			int temp = testIndices[i];
-			testIndices[i] = testIndices[randomIndex];
-			testIndices[randomIndex] = temp;
+		if(testIndices != null) {
+			for(int i = 0; i < testIndices.length * 0.5; ++i) {
+				int randomIndex = random.nextInt(testIndices.length);
+				int temp = testIndices[i];
+				testIndices[i] = testIndices[randomIndex];
+				testIndices[randomIndex] = temp;
+			}
 		}
 	}
 }
