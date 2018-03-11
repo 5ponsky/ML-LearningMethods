@@ -22,10 +22,9 @@ abstract class SupervisedLearner
 		features.setSize(data.rows(), data.cols()-1);
 		features.copyBlock(0, 0, data, 0, 0, data.rows(), data.cols()-1);
 
-		// Copies the labels over
 		// This assumes labels are a vector
 		labels.setSize(data.rows(), 1);
-		labels.copyBlock(0, 0, data, 0, data.rows()-1, data.rows(), 1);
+		labels.copyBlock(0, 0, data, 0, data.cols()-1, data.rows(), 1);
 	}
 
 	/// Splits into training/testing, training = total * splitRatio
@@ -42,18 +41,6 @@ abstract class SupervisedLearner
 		trainingFeatures.copyBlock(0, 0, featureData, 0, 0, trainingSize, featureData.cols());
 		trainingLabels.copyBlock(0, 0, labelData, 0, 0, trainingSize, labelData.cols());
 
-		// for(int i = 0; i < trainingSize; ++i) {
-		// 	for(int j = 0; j < featureData.cols(); ++j) {
-		// 		double newEntry = featureData.row(i).get(j);
-		// 		trainingFeatures.row(i).set(j, newEntry);
-		// 	}
-		//
-		// 	for(int j = 0; j < labelData.cols(); ++j) {
-		// 		double newEntry = labelData.row(i).get(j);
-		// 		trainingLabels.row(i).set(j, newEntry);
-		// 	}
-		// }
-
 		// copy the test set
 		testingFeatures.setSize(featureData.rows() - trainingSize, featureData.cols());
 		testingLabels.setSize(labelData.rows() - trainingSize, labelData.cols());
@@ -62,19 +49,6 @@ abstract class SupervisedLearner
 			trainingSize, 0, featureData.rows()-trainingSize, featureData.cols());
 		testingLabels.copyBlock(0, 0, labelData,
 			trainingSize, 0, labelData.rows()-trainingSize, labelData.cols());
-
-		// for(int i = trainingSize; i < featureData.rows(); ++i) {
-		// 	int i_adjusted = i - trainingSize;
-		// 	for(int j = 0; j < featureData.cols(); ++j) {
-		// 		double newEntry = featureData.row(i).get(j);
-		// 		testingFeatures.row(i_adjusted).set(j, newEntry); // fix i
-		// 	}
-		//
-		// 	for(int j = 0; j < labelData.cols(); ++j) {
-		// 		double newEntry = labelData.row(i).get(j);
-		// 		testingLabels.row(i_adjusted).set(j, newEntry); // fix i
-		// 	}
-		// }
 
 	}
 

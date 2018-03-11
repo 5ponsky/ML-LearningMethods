@@ -42,9 +42,11 @@ public class NeuralNet extends SupervisedLearner {
     blame.add(target);
     blame.addScaled(-1, layers.get(layers.size()-1).activation);
 
+
     int pos = weights.size();
     for(int i = layers.size()-1; i >= 0; --i) {
       Layer l = layers.get(i);
+      //l.debug();
       //prevBlame = new Vec(l.inputs);
 
       int weightsChunk = l.getNumberWeights();
@@ -117,9 +119,9 @@ public class NeuralNet extends SupervisedLearner {
     Vec in, target;
     for(int i = 0; i < features.rows(); ++i) {
       in = features.row(trainingIndices[i]);
-
-      target = new Vec(10);
-      target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+      target = labels.row(trainingIndices[i]);
+      //target = new Vec(10);
+      //target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
 
       predict(in);
       backProp(target);
@@ -127,7 +129,10 @@ public class NeuralNet extends SupervisedLearner {
 
       if(i % batch_size == 0) {
         refineWeights(0.0175);
-        gradient.scale(momentum);
+        if(momentum <= 0)
+          gradient.fill(0.0);
+        else
+          gradient.scale(momentum);
         scrambleIndices(random, trainingIndices, null);
       }
     }
@@ -222,7 +227,5 @@ public class NeuralNet extends SupervisedLearner {
   //
   //
   // }
-
-
 
 }

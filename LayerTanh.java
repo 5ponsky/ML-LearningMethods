@@ -40,4 +40,13 @@ public class LayerTanh extends Layer {
   void initWeights(Vec weights, Random random) {
   } // Tanh contains no weights so this is empty
 
+  void debug() {
+    System.out.println("---LayerLinear---");
+    System.out.println("Weights: " + getNumberWeights());
+    System.out.println("activation: ");
+    System.out.println(activation);
+    System.out.println("blame:");
+    System.out.println(blame);
+  }
+
 }

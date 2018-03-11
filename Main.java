@@ -236,17 +236,17 @@ class Main
 		Matrix data = new Matrix();
 		data.loadARFF("data/hypothyroid.arff");
 
-		Matrix sample = new Matrix(4, data.cols());
-		sample.copyBlock(0, 0, data, 0, 0, 4, data.cols());
-
-		 System.out.println(sample);
-		 System.out.println("------------------------------");
+		// Matrix sample = new Matrix(4, data.cols());
+		// sample.copyBlock(0, 0, data, 0, 0, 4, data.cols());
+		//
+		//  System.out.println(sample);
+		//  System.out.println("------------------------------");
 
 		Filter f = new Filter(new Imputer(), new Normalizer(), new NomCat(), new NeuralNet(random));
 
 		Matrix features = new Matrix();
 		Matrix labels = new Matrix();
-		f.splitLabels(sample, features, labels);
+		f.splitLabels(data, features, labels);
 		// System.out.println(features);
 		// System.out.println(labels);
 		// System.out.println("------------------------------");
@@ -265,7 +265,12 @@ class Main
 		// System.out.println("tl: " + testingLabels);
 
 		f.train(trainingFeatures, trainingLabels, 1, 0.0);
-
+		System.out.println("training complete");
+		int mis = 0;
+		mis = f.countMisclassifications(testingFeatures, testingLabels);
+		// while(mis > 350) {
+		// 	//f.countMisclassifications(testingFeatures, testingLabels);
+		// }
 	}
 
 	public static void main(String[] args)

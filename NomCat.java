@@ -22,12 +22,10 @@ public class NomCat extends PreprocessingOperation
 			int n = data.valueCount(i);
 			if (n < 3)
 				n = 1;
-
-			System.out.println("column: " + i + " has type: " + n);
+				
 			m_vals[i] = n;
 			totalVals += n;
 		}
-		System.out.println("TOTAL VALS: " + totalVals);
 
 		m_template.setSize(0, totalVals);
 	}

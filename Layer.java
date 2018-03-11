@@ -31,4 +31,6 @@ abstract class Layer
 	abstract int getNumberWeights();
 
 	abstract void initWeights(Vec weights, Random random);
+
+	abstract void debug();
 }

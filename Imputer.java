@@ -16,6 +16,7 @@ public class Imputer extends PreprocessingOperation
 	/// Calculates the mean or mode for each column as appropriate.
 	public void train(Matrix data) {
 		m_centroid = new double[data.cols()];
+		System.out.println("m_centroid size: " + m_centroid.length);
 		m_template.copyMetaData(data);
 
 		for (int i = 0; i < data.cols(); i++) {

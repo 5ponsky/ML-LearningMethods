@@ -18,7 +18,7 @@ public class LayerLinear extends Layer {
 
   void activate(Vec weights, Vec x) {
     Vec b = new Vec(weights, 0, outputs);
-    
+
     int pos = outputs;
     for(int i = 0; i < outputs; ++i) {
       Vec temp = new Vec(weights, pos, inputs);
@@ -136,6 +136,15 @@ public class LayerLinear extends Layer {
         ++weightsIndex;
       }
     }
+  }
+
+  void debug() {
+    System.out.println("---LayerLinear---");
+    System.out.println("Weights: " + getNumberWeights());
+    System.out.println("activation: ");
+    System.out.println(activation);
+    System.out.println("blame:");
+    System.out.println(blame);
   }
 
 }

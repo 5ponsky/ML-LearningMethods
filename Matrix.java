@@ -690,10 +690,18 @@ public class Matrix
 	/// Copies the specified rectangular portion of that matrix, and puts it in the specified location in this matrix.
 	public void copyBlock(int destRow, int destCol, Matrix that, int rowBegin, int colBegin, int rowCount, int colCount)
 	{
-		if (destRow + rowCount > this.rows() || destCol + colCount > this.cols())
-			throw new IllegalArgumentException("01. Out of range for destination matrix.");
-		if (rowBegin + rowCount > that.rows() || colBegin + colCount > that.cols())
-			throw new IllegalArgumentException("02. Out of range for source matrix.");
+		if (destRow + rowCount > this.rows())
+			throw new IllegalArgumentException("01. Out of range for destination matrix. " + '\n'
+				+ "destRow + rowCount: " + (destRow+rowCount) + " > this.rows(): " + this.rows());
+		if( destCol + colCount > this.cols())
+			throw new IllegalArgumentException("01. Out of range for destination matrix. " + '\n'
+				+ "destCol + colCount: " + (destCol+colCount) + " > this.cols(): " + this.cols());
+		if (rowBegin + rowCount > that.rows())
+			throw new IllegalArgumentException("02. Out of range for source matrix." + '\n'
+			 + "rowBegin + rowCount: " + (rowBegin+rowCount) + " > that.rows(): " + that.rows());
+		if(colBegin + colCount > that.cols())
+			throw new IllegalArgumentException("02. Out of range for source matrix." + '\n'
+				+ "colBegin + colCount: " + (colBegin+colCount) + " > that.cols(): " + that.cols());
 
 		// Copy the specified region of meta-data
 		for (int i = 0; i < colCount; i++)
