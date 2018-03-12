@@ -279,12 +279,12 @@ class Main
 		f.nn.initWeights();
 
 
-		int mis = trainingLabels.rows();
+		int mis = testingLabels.rows();
 		for(int i = 0; i < 10; ++i) {
 			mis = f.countMisclassifications(testingFeatures, testingLabels);
 			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
 			System.out.println("EPOCH " + i + ": Misclassifications: "
-				+ mis + " / " + trainingLabels.rows());
+				+ mis + " / " + testingLabels.rows());
 		}
 	}
 

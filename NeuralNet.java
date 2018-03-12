@@ -126,7 +126,7 @@ public class NeuralNet extends SupervisedLearner {
       updateGradient(in);
 
       if(i % batch_size == 0) {
-        double scale_learning = (1.0 / i);
+        double scale_learning = (1.0 / i + 1.0);
         refineWeights(0.0175 * i);
         if(momentum <= 0)
           gradient.fill(0.0);
