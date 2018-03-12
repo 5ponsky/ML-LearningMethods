@@ -109,31 +109,29 @@ public class NeuralNet extends SupervisedLearner {
     return (layers.get(layers.size()-1).activation);
   }
 
-  void train(Matrix features, Matrix labels, int batch_size, double momentum) {
+  void train(Matrix features, Matrix labels, int[] indices, int batch_size, double momentum) {
     if(batch_size < 1)
       throw new IllegalArgumentException("Batch Size is invalid!");
 
     // get the set of indices
-    int[] trainingIndices = new int[features.rows()];
+    // int[] trainingIndices = new int[features.rows()];
 
     Vec in, target;
     for(int i = 0; i < features.rows(); ++i) {
-      in = features.row(trainingIndices[i]);
-      target = labels.row(trainingIndices[i]);
-      //target = new Vec(10);
-      //target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
+      in = features.row(indices[i]);
+      target = labels.row(indices[i]);
 
       predict(in);
       backProp(target);
       updateGradient(in);
 
       if(i % batch_size == 0) {
-        refineWeights(0.0175);
+        double scale_learning = (1.0 / i);
+        refineWeights(0.0175 * i);
         if(momentum <= 0)
           gradient.fill(0.0);
         else
           gradient.scale(momentum);
-        scrambleIndices(random, trainingIndices, null);
       }
     }
   }

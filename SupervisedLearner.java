@@ -10,7 +10,7 @@ abstract class SupervisedLearner
 	abstract String name();
 
 	/// Train this supervised learner
-	abstract void train(Matrix features, Matrix labels, int batch_size, double momentum);
+	abstract void train(Matrix features, Matrix labels, int[] indices, int batch_size, double momentum);
 
 	/// Make a prediction
 	abstract Vec predict(Vec in);
@@ -164,7 +164,7 @@ abstract class SupervisedLearner
 					beginIndex+1, 0, featureData.rows() - endIndex, labelData.cols());
 
 
-				train(trainFeatures, trainLabels, 1, 0.0);
+				train(trainFeatures, trainLabels, null, 1, 0.0);
 				sse = sse + sum_squared_error(testFeatures, testLabels);
 			}
 

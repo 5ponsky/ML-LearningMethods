@@ -233,25 +233,22 @@ class Main
 
 	public static void testNomCat() {
 		Random random = new Random(123456);
+
+		/// Load data
 		Matrix data = new Matrix();
 		data.loadARFF("data/hypothyroid.arff");
 
-		// Matrix sample = new Matrix(4, data.cols());
-		// sample.copyBlock(0, 0, data, 0, 0, 4, data.cols());
-		//
-		//  System.out.println(sample);
-		//  System.out.println("------------------------------");
+		/// Create a new filter to preprocess our data
+		Filter f = new Filter(new NeuralNet(random), random);
 
-		Filter f = new Filter(new Imputer(), new Normalizer(), new NomCat(), new NeuralNet(random));
-
+		/// Partition the features from the labels
 		Matrix features = new Matrix();
 		Matrix labels = new Matrix();
 		f.splitLabels(data, features, labels);
-		// System.out.println(features);
-		// System.out.println(labels);
-		// System.out.println("------------------------------");
 
-		double splitRatio = 0.8;
+		/// Partition the data into training and testing blocks
+		/// With respective feature and labels blocks
+		double splitRatio = 0.75;
 		Matrix trainingFeatures = new Matrix();
 		Matrix trainingLabels = new Matrix();
 		Matrix testingFeatures = new Matrix();
@@ -259,18 +256,36 @@ class Main
 		f.splitData(features, labels, trainingFeatures, trainingLabels,
 			testingFeatures, testingLabels, splitRatio);
 
-		// System.out.println("trf: " + trainingFeatures);
-		// System.out.println("trl: " + trainingLabels);
-		// System.out.println("tf: " + testingFeatures);
-		// System.out.println("tl: " + testingLabels);
+		/// Build index arrays to shuffle training and testing data
+		int[] trainingIndices = new int[trainingFeatures.rows()];
+		int[] testIndices = new int[testingFeatures.rows()];
 
-		f.train(trainingFeatures, trainingLabels, 1, 0.0);
-		System.out.println("training complete");
-		int mis = 0;
-		mis = f.countMisclassifications(testingFeatures, testingLabels);
-		// while(mis > 350) {
-		// 	//f.countMisclassifications(testingFeatures, testingLabels);
-		// }
+		// populate the index arrays with indices
+		for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
+		for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
+
+		System.out.println("pre: " + trainingLabels.cols());
+		f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
+		System.out.println("post: " + trainingLabels.cols());
+		System.out.println("filter training complete");
+
+		/// I want some intelligent way of getting the input and outputs
+		f.nn.layers.add(new LayerLinear(trainingFeatures.cols(), 100));
+		f.nn.layers.add(new LayerTanh(100));
+
+		f.nn.layers.add(new LayerLinear(100, 4));
+		f.nn.layers.add(new LayerTanh(4));
+
+		f.nn.initWeights();
+
+
+		int mis = trainingLabels.rows();
+		for(int i = 0; i < 10; ++i) {
+			mis = f.countMisclassifications(testingFeatures, testingLabels);
+			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
+			System.out.println("EPOCH " + i + ": Misclassifications: "
+				+ mis + " / " + trainingLabels.rows());
+		}
 	}
 
 	public static void main(String[] args)
