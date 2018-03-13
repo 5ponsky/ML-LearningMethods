@@ -4,13 +4,12 @@ import java.util.Random;
 public class Filter extends SupervisedLearner {
   NeuralNet nn;
   Filter filter;
-  Random random;
 
-  Filter() {}
+  Filter(Random r) { super(r); }
 
   Filter(NeuralNet nn, Random r) {
+    super(r);
     this.nn = nn;
-    random = r;
   }
 
   String name() { return ""; }

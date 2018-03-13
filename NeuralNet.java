@@ -5,13 +5,12 @@ public class NeuralNet extends SupervisedLearner {
   protected Vec weights;
   protected Vec gradient;
   protected ArrayList<Layer> layers;
-  protected Random random;
 
   String name() { return ""; }
 
   NeuralNet(Random r) {
+    super(r);
     layers = new ArrayList<Layer>();
-    random = r;
   }
 
   void initWeights() {
@@ -31,7 +30,7 @@ public class NeuralNet extends SupervisedLearner {
       int weightsChunk = l.getNumberWeights();
       Vec w = new Vec(weights, pos, weightsChunk);
 
-      l.initWeights(w, random);
+      l.initWeights(w, this.random);
 
       pos += weightsChunk;
     }

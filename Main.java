@@ -28,20 +28,6 @@ class Main
 		System.out.println("Misclassifications by " + learner.name() + " at " + challenge + " = " + Integer.toString(misclassifications) + "/" + Integer.toString(testFeatures.rows()));
 	}
 
-	public static void run(SupervisedLearner learner) {
-		int folds = 10;
-		int repititions = 5;
-
-		// Load the training data
-		Matrix featureData = new Matrix();
-		featureData.loadARFF("data/housing_features.arff");
-		Matrix labelData = new Matrix();
-		labelData.loadARFF("data/housing_labels.arff");
-
-		double rmse = learner.cross_validation(repititions, folds, featureData, labelData);
-		System.out.println("RMSE: " + rmse);
-	}
-
 	public static void testCV(SupervisedLearner learner) {
 		Matrix f = new Matrix();
 		f.newColumns(1);
@@ -61,7 +47,7 @@ class Main
 		l.takeRow(l2);
 		l.takeRow(l3);
 
-		double rmse = learner.cross_validation(1, 3, f, l);
+		double rmse = learner.cross_validation(1, 3, f, l, learner);
 		System.out.println("RMSE: " + rmse);
 	}
 
@@ -238,6 +224,9 @@ class Main
 		Matrix data = new Matrix();
 		data.loadARFF("data/hypothyroid.arff");
 
+		int[] indices = new int[data.rows()];
+		for(int i = 0; i < indices.length; ++i) { indices[i] = i; }
+
 		/// Create a new filter to preprocess our data
 		Filter f = new Filter(new NeuralNet(random), random);
 
@@ -246,31 +235,31 @@ class Main
 		Matrix labels = new Matrix();
 		f.splitLabels(data, features, labels);
 
-		/// Partition the data into training and testing blocks
-		/// With respective feature and labels blocks
-		double splitRatio = 0.75;
-		Matrix trainingFeatures = new Matrix();
-		Matrix trainingLabels = new Matrix();
-		Matrix testingFeatures = new Matrix();
-		Matrix testingLabels = new Matrix();
-		f.splitData(features, labels, trainingFeatures, trainingLabels,
-			testingFeatures, testingLabels, splitRatio);
+		// /// Partition the data into training and testing blocks
+		// /// With respective feature and labels blocks
+		// double splitRatio = 0.75;
+		// Matrix trainingFeatures = new Matrix();
+		// Matrix trainingLabels = new Matrix();
+		// Matrix testingFeatures = new Matrix();
+		// Matrix testingLabels = new Matrix();
+		// f.splitData(features, labels, trainingFeatures, trainingLabels,
+		// 	testingFeatures, testingLabels, splitRatio);
 
 		/// Build index arrays to shuffle training and testing data
-		int[] trainingIndices = new int[trainingFeatures.rows()];
-		int[] testIndices = new int[testingFeatures.rows()];
+		// int[] trainingIndices = new int[trainingFeatures.rows()];
+		// int[] testIndices = new int[testingFeatures.rows()];
 
 		// populate the index arrays with indices
-		for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
-		for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
+		// for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
+		// for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
 
-		System.out.println("pre: " + trainingLabels.cols());
-		f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
-		System.out.println("post: " + trainingLabels.cols());
-		System.out.println("filter training complete");
+		// System.out.println("pre: " + trainingLabels.cols());
+		f.train(features, labels, null, 0, 0.0);
+		// System.out.println("post: " + trainingLabels.cols());
+		// System.out.println("filter training complete");
 
 		/// I want some intelligent way of getting the input and outputs
-		f.nn.layers.add(new LayerLinear(trainingFeatures.cols(), 100));
+		f.nn.layers.add(new LayerLinear(features.cols(), 100));
 		f.nn.layers.add(new LayerTanh(100));
 
 		f.nn.layers.add(new LayerLinear(100, 4));
@@ -278,14 +267,23 @@ class Main
 
 		f.nn.initWeights();
 
-
-		int mis = testingLabels.rows();
-		for(int i = 0; i < 10; ++i) {
-			mis = f.countMisclassifications(testingFeatures, testingLabels);
-			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
-			System.out.println("EPOCH " + i + ": Misclassifications: "
-				+ mis + " / " + testingLabels.rows());
+		int repititions = 10;
+		int folds = 5;
+		double rmse = 0;
+		for(int i = 0; i < repititions; ++i) {
+			rmse = f.cross_validation_training(folds, repititions, features,
+				labels, indices, f.nn);
 		}
+
+
+
+	// 	int mis = testingLabels.rows();
+	// 	for(int i = 0; i < 10; ++i) {
+	// 		mis = f.countMisclassifications(testingFeatures, testingLabels);
+	// 		f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
+	// 		System.out.println("EPOCH " + i + ": Misclassifications: "
+	// 			+ mis + " / " + testingLabels.rows());
+	// 	}
 	}
 
 	public static void main(String[] args)

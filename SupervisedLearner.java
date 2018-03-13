@@ -6,6 +6,12 @@ import java.util.Random;
 
 abstract class SupervisedLearner
 {
+	Random random;
+
+	SupervisedLearner(Random r) {
+		random = r;
+	}
+
 	/// Return the name of this learner
 	abstract String name();
 
@@ -30,28 +36,86 @@ abstract class SupervisedLearner
 	/// Splits into training/testing, training = total * splitRatio
 	// Assumes that the labels are a vector
 	void splitData(Matrix featureData, Matrix labelData, Matrix trainingFeatures, Matrix trainingLabels,
-		Matrix testingFeatures, Matrix testingLabels, double splitRatio) {
+		Matrix testingFeatures, Matrix testingLabels, int folds, int index) {
 
-		int trainingSize = (int)(featureData.rows() * splitRatio);
+		// calculate indexes and ranges for
+		int beginIndex = index * (featureData.rows() / folds);
+		int endIndex = (index + 1) * (featureData.rows() / folds);
 
-		// copy the training set
-		trainingFeatures.setSize(trainingSize, featureData.cols());
-		trainingLabels.setSize(trainingSize, labelData.cols());
+		// First Training block
+		trainingFeatures.copyBlock(0, 0, featureData, 0, 0, beginIndex, featureData.cols());
+		trainingLabels.copyBlock(0, 0, labelData, 0, 0, beginIndex, labelData.cols());
 
-		trainingFeatures.copyBlock(0, 0, featureData, 0, 0, trainingSize, featureData.cols());
-		trainingLabels.copyBlock(0, 0, labelData, 0, 0, trainingSize, labelData.cols());
+		// Test block
+		testingFeatures.copyBlock(0, 0, featureData, beginIndex, 0, endIndex-beginIndex, featureData.cols());
+		testingLabels.copyBlock(0, 0, labelData, beginIndex, 0, endIndex-beginIndex, labelData.cols());
 
-		// copy the test set
-		testingFeatures.setSize(featureData.rows() - trainingSize, featureData.cols());
-		testingLabels.setSize(labelData.rows() - trainingSize, labelData.cols());
-
-		testingFeatures.copyBlock(0, 0, featureData,
-			trainingSize, 0, featureData.rows()-trainingSize, featureData.cols());
-		testingLabels.copyBlock(0, 0, labelData,
-			trainingSize, 0, labelData.rows()-trainingSize, labelData.cols());
+		// 2nd Training block
+		trainingFeatures.copyBlock(beginIndex, 0, featureData,
+			beginIndex+1, 0, featureData.rows() - endIndex, featureData.cols());
+		trainingLabels.copyBlock(beginIndex, 0, labelData,
+			beginIndex+1, 0, featureData.rows() - endIndex, labelData.cols());
 
 	}
 
+
+	double cross_validation_training(int folds, int repititions, Matrix features,
+		Matrix labels, int[] indices, SupervisedLearner learner) {
+
+		// Some values for training
+		int batch_size = 1;
+		double momentum = 0.0;
+
+		// We need empty matrices to hold all over our data
+		Matrix trainingFeatures = new Matrix();
+		Matrix trainingLabels = new Matrix();
+		Matrix testingFeatures = new Matrix();
+		Matrix testingLabels = new Matrix();
+
+		// Create the partitioned matrices
+		double splitRatio = 1.0 - (1.0 / folds);
+		int trainingSize = (int)Math.ceil(features.rows() * splitRatio);
+
+		trainingFeatures.setSize(trainingSize, features.cols());
+		trainingLabels.setSize(trainingSize, labels.cols());
+
+		testingFeatures.setSize(features.rows() - trainingSize, features.cols());
+		testingLabels.setSize(labels.rows() - trainingSize, labels.cols());
+
+		double sse = 0;
+		for(int i = 0; i < folds; ++i) {
+			splitData(features, labels, trainingFeatures, trainingLabels,
+				testingFeatures, testingLabels, folds, i);
+
+			learner.train(trainingFeatures, trainingLabels, indices, batch_size, momentum);
+			sse += sum_squared_error(testingFeatures, testingLabels, learner);
+		}
+
+		double mse = (sse / (double)features.rows());
+
+		// Scramble the indices
+		scrambleIndices(random, indices, null);
+
+		return mse;
+	}
+
+	double sum_squared_error(Matrix features, Matrix labels, SupervisedLearner learner) {
+		if(features.rows() != labels.rows())
+			throw new IllegalArgumentException("Mistmatching number of rows");
+
+		double mis = 0;
+		for(int i = 0; i < features.rows(); i++) {
+			Vec feat = features.row(i);
+			Vec pred = learner.predict(feat);
+			Vec lab = labels.row(i);
+			for(int j = 0; j < lab.size(); j++) {
+				double blame = (lab.get(j) - pred.get(j)) * (lab.get(j) - pred.get(j));
+				mis = mis + blame;
+			}
+		}
+
+		return mis;
+	}
 
 	void convergence() {
 
@@ -95,27 +159,7 @@ abstract class SupervisedLearner
 	}
 
 
-	double sum_squared_error(Matrix features, Matrix labels) {
-		if(features.rows() != labels.rows())
-			throw new IllegalArgumentException("Mistmatching number of rows");
-
-		double mis = 0;
-		for(int i = 0; i < features.rows(); i++) {
-			Vec feat = features.row(i);
-			Vec pred = predict(feat);
-			Vec lab = labels.row(i);
-			for(int j = 0; j < lab.size(); j++) {
-				double blame = (lab.get(j) - pred.get(j)) * (lab.get(j) - pred.get(j));
-				System.out.println(i + " " + pred);
-				mis = mis + blame;
-			}
-		}
-
-		return mis;
-	}
-
-	double cross_validation(int r, int f, Matrix featureData, Matrix labelData) {
-		Random random = new Random(1234);
+	double cross_validation(int r, int f, Matrix featureData, Matrix labelData, SupervisedLearner learner) {
 
 		// Cross-Validation indices
 		int repititions = r;
@@ -165,18 +209,18 @@ abstract class SupervisedLearner
 
 
 				train(trainFeatures, trainLabels, null, 1, 0.0);
-				sse = sse + sum_squared_error(testFeatures, testLabels);
+				sse = sse + sum_squared_error(testFeatures, testLabels, learner);
 			}
 
 			mse = mse + (sse / featureData.rows());
 			sse = 0;
 
-			for(int i = 0; i < featureData.rows(); ++i) {
-				int selectedRow = random.nextInt(featureData.rows());
-				int destinationRow = random.nextInt(featureData.rows());
-				featureData.swapRows(selectedRow, destinationRow);
-				labelData.swapRows(selectedRow, destinationRow);
-			}
+			// for(int i = 0; i < featureData.rows(); ++i) {
+			// 	int selectedRow = random.nextInt(featureData.rows());
+			// 	int destinationRow = random.nextInt(featureData.rows());
+			// 	featureData.swapRows(selectedRow, destinationRow);
+			// 	labelData.swapRows(selectedRow, destinationRow);
+			// }
 		}
 
 
