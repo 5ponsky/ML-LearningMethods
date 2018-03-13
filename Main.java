@@ -224,39 +224,34 @@ class Main
 		Matrix data = new Matrix();
 		data.loadARFF("data/hypothyroid.arff");
 
-		int[] indices = new int[data.rows()];
-		for(int i = 0; i < indices.length; ++i) { indices[i] = i; }
-
 		/// Create a new filter to preprocess our data
-		Filter f = new Filter(new NeuralNet(random), random);
+		Filter f = new Filter(random);
 
 		/// Partition the features from the labels
 		Matrix features = new Matrix();
 		Matrix labels = new Matrix();
 		f.splitLabels(data, features, labels);
 
-		// /// Partition the data into training and testing blocks
-		// /// With respective feature and labels blocks
-		// double splitRatio = 0.75;
-		// Matrix trainingFeatures = new Matrix();
-		// Matrix trainingLabels = new Matrix();
-		// Matrix testingFeatures = new Matrix();
-		// Matrix testingLabels = new Matrix();
-		// f.splitData(features, labels, trainingFeatures, trainingLabels,
-		// 	testingFeatures, testingLabels, splitRatio);
+		// PreProcess the data
+
+		/// Partition the data into training and testing blocks
+		/// With respective feature and labels blocks
+		double splitRatio = 0.75;
+		Matrix trainingFeatures = new Matrix();
+		Matrix trainingLabels = new Matrix();
+		Matrix testingFeatures = new Matrix();
+		Matrix testingLabels = new Matrix();
+		f.splitData(features, labels, trainingFeatures, trainingLabels,
+			testingFeatures, testingLabels, 5, 0);
+
 
 		/// Build index arrays to shuffle training and testing data
-		// int[] trainingIndices = new int[trainingFeatures.rows()];
-		// int[] testIndices = new int[testingFeatures.rows()];
+		int[] trainingIndices = new int[trainingFeatures.rows()];
+		int[] testIndices = new int[testingFeatures.rows()];
 
 		// populate the index arrays with indices
-		// for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
-		// for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
-
-		// System.out.println("pre: " + trainingLabels.cols());
-		f.train(features, labels, null, 0, 0.0);
-		// System.out.println("post: " + trainingLabels.cols());
-		// System.out.println("filter training complete");
+		for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
+		for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
 
 		/// I want some intelligent way of getting the input and outputs
 		f.nn.layers.add(new LayerLinear(features.cols(), 100));
@@ -267,23 +262,21 @@ class Main
 
 		f.nn.initWeights();
 
-		int repititions = 10;
-		int folds = 5;
-		double rmse = 0;
-		for(int i = 0; i < repititions; ++i) {
-			rmse = f.cross_validation_training(folds, repititions, features,
-				labels, indices, f.nn);
+			f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
+
+
+		System.out.println("training Features: " + trainingFeatures.rows() + " " + trainingFeatures.cols());
+		System.out.println("Training Labels: " + trainingLabels.rows() + " " + trainingLabels.cols());
+		System.out.println("testing Features: " + testingFeatures.rows() + " " + testingFeatures.cols());
+		System.out.println("testing Labels: " + testingLabels.rows() + " " + testingLabels.cols());
+
+		int mis = testingLabels.rows();
+		for(int i = 0; i < 10; ++i) {
+			mis = f.countMisclassifications(testingFeatures, testingLabels);
+			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
+			System.out.println("EPOCH " + i + ": Misclassifications: "
+				+ mis + " / " + testingLabels.rows());
 		}
-
-
-
-	// 	int mis = testingLabels.rows();
-	// 	for(int i = 0; i < 10; ++i) {
-	// 		mis = f.countMisclassifications(testingFeatures, testingLabels);
-	// 		f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
-	// 		System.out.println("EPOCH " + i + ": Misclassifications: "
-	// 			+ mis + " / " + testingLabels.rows());
-	// 	}
 	}
 
 	public static void main(String[] args)

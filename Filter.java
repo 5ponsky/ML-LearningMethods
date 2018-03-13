@@ -5,7 +5,10 @@ public class Filter extends SupervisedLearner {
   NeuralNet nn;
   Filter filter;
 
-  Filter(Random r) { super(r); }
+  Filter(Random r) {
+    super(r);
+    nn = new NeuralNet(r);
+  }
 
   Filter(NeuralNet nn, Random r) {
     super(r);

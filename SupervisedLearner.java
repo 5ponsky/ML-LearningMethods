@@ -33,14 +33,25 @@ abstract class SupervisedLearner
 		labels.copyBlock(0, 0, data, 0, data.cols()-1, data.rows(), 1);
 	}
 
-	/// Splits into training/testing, training = total * splitRatio
-	// Assumes that the labels are a vector
+	/// This splits Features/Labels into training and testing partitions
+	// Supports cross-validation
 	void splitData(Matrix featureData, Matrix labelData, Matrix trainingFeatures, Matrix trainingLabels,
-		Matrix testingFeatures, Matrix testingLabels, int folds, int index) {
+		Matrix testingFeatures, Matrix testingLabels, int partitions, int index) {
 
 		// calculate indexes and ranges for
-		int beginIndex = index * (featureData.rows() / folds);
-		int endIndex = (index + 1) * (featureData.rows() / folds);
+		int beginIndex = index * (featureData.rows() / partitions);
+		int endIndex = (index + 1) * (featureData.rows() / partitions);
+
+		// Create the partitioned matrices
+		double splitRatio = 1.0 - (1.0 / partitions);
+		int trainingSize = (int)Math.ceil(featureData.rows() * splitRatio);
+
+		// Size the matrices
+		trainingFeatures.setSize(trainingSize, featureData.cols());
+		trainingLabels.setSize(trainingSize, labelData.cols());
+
+		testingFeatures.setSize(featureData.rows() - trainingSize, featureData.cols());
+		testingLabels.setSize(labelData.rows() - trainingSize, labelData.cols());
 
 		// First Training block
 		trainingFeatures.copyBlock(0, 0, featureData, 0, 0, beginIndex, featureData.cols());
