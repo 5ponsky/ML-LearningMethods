@@ -253,8 +253,11 @@ class Main
 		for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
 		for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
 
+		// Train the preprocessors for the training data
+		f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
+
 		/// I want some intelligent way of getting the input and outputs
-		f.nn.layers.add(new LayerLinear(features.cols(), 100));
+		f.nn.layers.add(new LayerLinear(trainingFeatures.cols(), 100));
 		f.nn.layers.add(new LayerTanh(100));
 
 		f.nn.layers.add(new LayerLinear(100, 4));
@@ -262,19 +265,14 @@ class Main
 
 		f.nn.initWeights();
 
-			f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
-
-
-		System.out.println("training Features: " + trainingFeatures.rows() + " " + trainingFeatures.cols());
-		System.out.println("Training Labels: " + trainingLabels.rows() + " " + trainingLabels.cols());
-		System.out.println("testing Features: " + testingFeatures.rows() + " " + testingFeatures.cols());
-		System.out.println("testing Labels: " + testingLabels.rows() + " " + testingLabels.cols());
-
 		int mis = testingLabels.rows();
-		for(int i = 0; i < 10; ++i) {
+		double sse = 0;
+		while(true) {
 			mis = f.countMisclassifications(testingFeatures, testingLabels);
+			sse = f.convergence(testingFeatures, testingLabels, 0.05, sse);
+
 			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
-			System.out.println("EPOCH " + i + ": Misclassifications: "
+			System.out.println("EPOCH " + ": Misclassifications: "
 				+ mis + " / " + testingLabels.rows());
 		}
 	}

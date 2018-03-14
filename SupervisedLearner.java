@@ -21,6 +21,15 @@ abstract class SupervisedLearner
 	/// Make a prediction
 	abstract Vec predict(Vec in);
 
+	// Measure SSE against validation and if error does not improve by j => done
+	void convergence(Matrix testFeatures, Matrix testLabels, double threshold, double previous) {
+		double sse = sum_squared_error(testFeatures, testLabels);
+		double convergence = 1 - (previous / sse);
+		if(convergence < threshold)
+
+		return sse;
+	}
+
 	/// If the data patterns are merged with the labels seperate them
 	// Assumes labels are vectors
 	void splitLabels(Matrix data, Matrix features, Matrix labels) {
@@ -126,10 +135,6 @@ abstract class SupervisedLearner
 		}
 
 		return mis;
-	}
-
-	void convergence() {
-
 	}
 
 	/// Measures the misclassifications with the provided test data

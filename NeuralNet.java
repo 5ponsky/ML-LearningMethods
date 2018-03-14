@@ -6,11 +6,20 @@ public class NeuralNet extends SupervisedLearner {
   protected Vec gradient;
   protected ArrayList<Layer> layers;
 
+  // This is a temporary architecture decision;
+  // I need to be able to pause the training at any moment to test the net,
+  // But resume exactly where I left off.  I didn't choose to pass as a parameter,
+  // Because Idk if I want to change every supervised learner yet.
+  public int trainingProgress;
+
+
   String name() { return ""; }
 
   NeuralNet(Random r) {
     super(r);
     layers = new ArrayList<Layer>();
+
+    trainingProgress = 0;
   }
 
   void initWeights() {
@@ -112,8 +121,8 @@ public class NeuralNet extends SupervisedLearner {
     if(batch_size < 1)
       throw new IllegalArgumentException("Batch Size is invalid!");
 
-    // get the set of indices
-    // int[] trainingIndices = new int[features.rows()];
+    // How many patterns/mini-batches should we train on before testing?
+    int cutoff = 1;
 
     Vec in, target;
     for(int i = 0; i < features.rows(); ++i) {
@@ -131,98 +140,13 @@ public class NeuralNet extends SupervisedLearner {
           gradient.fill(0.0);
         else
           gradient.scale(momentum);
+
+        if(i % cutoff == 0) {
+          trainingProgress = i;
+          break;
+        }
       }
     }
   }
-
-  /// Train this supervised learner
-  // void train(Matrix features, Matrix labels, Training type) {
-  //   int batch_size = 10;
-  //   int[] trainingIndices =  new int[features.rows()];
-  //   // double[] testIndices = new double[]
-  //
-  //   if(Training.STOCHASTIC == type) {
-  //     /// Update weights every training pattern
-  //
-  //     Vec in, target;
-  //     for(int i = 0; i < features.rows(); ++i) {
-  //       gradient.fill(0.0);
-  //       in = features.row(trainingIndices[i]);
-  //
-  //       target = new Vec(10);
-  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-  //
-  //       predict(in);
-  //       backProp(target);
-  //       updateGradient(in);
-  //       refineWeights(0.0175);
-  //     }
-  //
-  //     scrambleIndices(random, trainingIndices, null);
-  //   } else if(Training.BATCH == type) {
-  //     /// Update weights after the entire training set
-  //
-  //     Vec in, target;
-  //     for(int i = 0; i < features.rows(); ++i) {
-  //       in = features.row(trainingIndices[i]);
-  //
-  //       target = new Vec(10);
-  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-  //
-  //       predict(in);
-  //       backProp(target);
-  //       updateGradient(in);
-  //     }
-  //
-  //     refineWeights(0.0175);
-  //     gradient.fill(0.0);
-  //     scrambleIndices(random, trainingIndices, null);
-  //   } else if(Training.MINIBATCH == type) {
-  //     /// Update weights after batch_size of patterns
-  //
-  //     Vec in, target;
-  //     for(int i = 0; i < features.rows(); ++i) {
-  //       in = features.row(trainingIndices[i]);
-  //
-  //       target = new Vec(10);
-  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-  //
-  //       predict(in);
-  //       backProp(target);
-  //       updateGradient(in);
-  //
-  //       if(i % batch_size == 0) {
-  //         refineWeights(0.0175);
-  //         gradient.fill(0.0);
-  //         scrambleIndices(random, trainingIndices, null);
-  //       }
-  //     }
-  //
-  //     refineWeights(0.0175);
-  //     gradient.fill(0.0);
-  //     scrambleIndices(random, trainingIndices, null);
-  //   } else if(Training.MOMENTUM == type) {
-  //     /// Update weights after every pattern, scaling gradient by 0.9
-  //
-  //     Vec in, target;
-  //     gradient.fill(0.0);
-  //     for(int i = 0; i < features.rows(); ++i) {
-  //       in = features.row(trainingIndices[i]);
-  //
-  //       target = new Vec(10);
-  //       target.vals[(int) labels.row(trainingIndices[i]).get(0)] = 1;
-  //
-  //       predict(in);
-  //       backProp(target);
-  //       updateGradient(in);
-  //       refineWeights(0.0175);
-  //       gradient.scale(0.9);
-  //     }
-  //   } else {
-  //     throw new IllegalArgumentException("No usable training method given: " + type);
-  //   }
-  //
-  //
-  // }
 
 }
