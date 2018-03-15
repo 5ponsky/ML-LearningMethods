@@ -3,33 +3,40 @@ import java.util.Random;
 
 public class Filter extends SupervisedLearner {
   NeuralNet nn;
-  Filter filter;
+
+  // I want to change this later, but for now I'm keeping a set of
+  // preprocessors for both features and labels
+  // This makes it easier to pre and post process without doing a lot of
+  // extra calculations and coding
+  Imputer fim, lim;
+  Normalizer fnorm, lnorm;
+  NomCat fnm, lnm;
+
 
   Filter(Random r) {
     super(r);
     nn = new NeuralNet(r);
-  }
 
-  Filter(NeuralNet nn, Random r) {
-    super(r);
-    this.nn = nn;
+    fim = new Imputer();
+    lim = new Imputer();
+    fnorm = new Normalizer();
+    lnorm = new Normalizer();
+    fnm = new NomCat();
+    lnm = new NomCat();
   }
 
   String name() { return ""; }
 
   /// process data into a format readily available for training
   void train(Matrix features, Matrix labels, int[] indices, int batch_size, double momentum) {
-    features.copy(preProcess(features, new Imputer(),
-        new Normalizer(), new NomCat()));
-    labels.copy(preProcess(labels, new Imputer(),
-        new Normalizer(), new NomCat()));
+    features.copy(preProcess(features, fim, fnorm, fnm));
+    labels.copy(preProcess(labels, lim, lnorm, lnm));
   }
 
   /// Train the NeuralNet
   void trainNeuralNet(Matrix features, Matrix labels, int[] indices, int batch_size,
     double momentum) {
     nn.train(features, labels, indices, batch_size, momentum);
-    //scrambleIndices(random, indices, null);
   }
 
   Matrix preProcess(Matrix data, Imputer im, Normalizer norm, NomCat nm) {
@@ -73,25 +80,25 @@ public class Filter extends SupervisedLearner {
 			throw new IllegalArgumentException("Mismatching number of rows");
 
     // PreProcess the features
-    Matrix processedTestFeatures = preProcess(features, new Imputer(),
-      new Normalizer(), new NomCat());
+    // Matrix processedTestFeatures = preProcess(features, new Imputer(),
+    //   new Normalizer(), new NomCat());
 
     // So in this function we actually need a persistent set of preprocessors
     // That are trained on labels so we can re-transform them back into
     // their nominal representation for misclassification
-    Imputer im = new Imputer();
-    Normalizer norm = new Normalizer();
-    NomCat nm = new NomCat();
-    Matrix processedTestLabels = preProcess(labels, im, norm, nm);
+    // Imputer im = new Imputer();
+    // Normalizer norm = new Normalizer();
+    // NomCat nm = new NomCat();
+    // Matrix processedTestLabels = preProcess(labels, im, norm, nm);
 
     // predict a value and check if it is an accurate prediction
 		int mis = 0;
-		for(int i = 0; i < processedTestFeatures.rows(); i++) {
-			Vec feat = processedTestFeatures.row(i);
+		for(int i = 0; i < features.rows(); i++) {
+			Vec feat = features.row(i);
       Vec lab = labels.row(i);
 
       Vec prediction = nn.predict(feat);
-      Vec out = postProcess(prediction, nm, norm, im);
+      Vec out = postProcess(prediction, lnm, lnorm, lim);
 
       // Component-wise comparison of nominal values
       for(int j = 0; j < lab.size(); ++j) {
@@ -109,25 +116,26 @@ public class Filter extends SupervisedLearner {
       throw new IllegalArgumentException("Mismatching number of rows");
 
     // PreProcess the features
-    Matrix processedTestFeatures = preProcess(features, new Imputer(),
-      new Normalizer(), new NomCat());
+    // Matrix processedTestFeatures = preProcess(features, new Imputer(),
+    //   new Normalizer(), new NomCat());
 
     // So in this function we actually need a persistent set of preprocessors
     // That are trained on labels so we can re-transform them back into
     // their nominal representation for misclassification
-    Imputer im = new Imputer();
-    Normalizer norm = new Normalizer();
-    NomCat nm = new NomCat();
-    Matrix processedTestLabels = preProcess(labels, im, norm, nm);
+    // Imputer im = new Imputer();
+    // Normalizer norm = new Normalizer();
+    // NomCat nm = new NomCat();
+    // Matrix processedTestLabels = preProcess(labels, im, norm, nm);
 
     // predict a value and check if it is an accurate prediction
     double mis = 0;
-    for(int i = 0; i < processedTestFeatures.rows(); i++) {
-      Vec feat = processedTestFeatures.row(i);
+    for(int i = 0; i < features.rows(); i++) {
+      Vec feat = features.row(i);
       Vec lab = labels.row(i);
 
       Vec prediction = nn.predict(feat);
-      Vec out = postProcess(prediction, nm, norm, im);
+      System.out.println(prediction);
+      Vec out = postProcess(prediction, lnm, lnorm, lim);
 
       // Component-wise comparison of nominal values
       for(int j = 0; j < lab.size(); ++j) {

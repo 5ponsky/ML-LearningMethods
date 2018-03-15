@@ -222,8 +222,11 @@ class Main
 		Random random = new Random(123456);
 
 		/// Load data
-		Matrix data = new Matrix();
-		data.loadARFF("data/hypothyroid.arff");
+		Matrix derp = new Matrix();
+		derp.loadARFF("data/hypothyroid.arff");
+
+		Matrix data = new Matrix(5, derp.cols());
+		data.copyBlock(0, 0, data, 0, 0, 5, data.cols());
 
 		/// Create a new filter to preprocess our data
 		Filter f = new Filter(random);
@@ -233,7 +236,11 @@ class Main
 		Matrix labels = new Matrix();
 		f.splitLabels(data, features, labels);
 
-		// PreProcess the data
+		/// PREPROCESSING
+		// We need a set of preprocessors for both features and labels
+
+		// Train the preprocessors for the training data
+		f.train(features, labels, null, 0, 0.0);
 
 		/// Partition the data into training and testing blocks
 		/// With respective feature and labels blocks
@@ -254,9 +261,6 @@ class Main
 		for(int i = 0; i < trainingIndices.length; ++i) { trainingIndices[i] = i; }
 		for(int i = 0; i < testIndices.length; ++i) { testIndices[i] = i; }
 
-		// Train the preprocessors for the training data
-		f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
-		f.train(testingFeatures, testingLabels, null, 0, 0.0);
 
 		/// I want some intelligent way of getting the input and outputs
 		f.nn.layers.add(new LayerLinear(trainingFeatures.cols(), 100));
@@ -306,36 +310,49 @@ class Main
 			if(convergence < tolerance) break;
 		}
 
+	}
 
+	public static void newTest() {
+		Random random = new Random(123456);
 
+		/// Load data
+		Matrix data = new Matrix();
+		data.loadARFF("data/hypothyroid.arff");
 
+		Matrix sample = new Matrix(5, data.cols());
+		sample.copyBlock(0, 0, data, 0, 0, 5, data.cols());
 
+		/// Create a new filter to preprocess our data
+		Filter f = new Filter(random);
 
-		// while(true) {
-		// 	sse = f.sum_squared_error(testingFeatures, testingLabels);
-		//
-		// 	f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
-		// 	if(f.nn.trainingProgress % trainingFeatures.rows() == 0) {
-		// 		// mis = f.countMisclassifications(testingFeatures, testingLabels);
-		// 		// System.out.println("EPOCH " + epoch + ": Misclassifications: "
-		// 		// 	+ mis + " / " + testingLabels.rows());
-		// 		// ++epoch;
-		// 	}
-		//
-		// 	// System.out.println("previous: " + previous);
-		// 	// System.out.println("sse: " + sse);
-		// 	// System.out.println("Convergence = " + 1 + " - " + "(" + previous + "/" + sse + ")");
-		// 	double convergence = Math.abs(1 - (previous / sse));
-		// 	if(convergence < tolerance) {
-		// 		System.out.println("convergence: " + convergence + " < tolerance: " + tolerance);
-		// 		break;
-		// 	}
-		// 	previous = sse;
-		// }
+		/// Partition the features from the labels
+		Matrix features = new Matrix();
+		Matrix labels = new Matrix();
+		f.splitLabels(sample, features, labels);
+
+		// PreProcess the data
+
+		// Train the preprocessors for the training data
+		f.train(features, labels, null, 0, 0.0);
+
+		/// Partition the data into training and testing blocks
+		/// With respective feature and labels blocks
+		double splitRatio = 0.75;
+		Matrix trainingFeatures = new Matrix();
+		Matrix trainingLabels = new Matrix();
+		Matrix testingFeatures = new Matrix();
+		Matrix testingLabels = new Matrix();
+		f.splitData(features, labels, trainingFeatures, trainingLabels,
+			testingFeatures, testingLabels, 5, 0);
+
+		System.out.println(trainingFeatures);
+		System.out.println("----");
+		System.out.println(testingFeatures);
 	}
 
 	public static void main(String[] args)
 	{
+		//newTest();
 		testNomCat();
 
 	}
