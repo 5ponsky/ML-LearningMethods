@@ -266,14 +266,28 @@ class Main
 		f.nn.initWeights();
 
 		int mis = testingLabels.rows();
-		double sse = 0;
+		int epoch = 0;
+		double sse = 1;
+		double previous = 0;
+		double tolerance = 0.00003;
 		while(true) {
 			mis = f.countMisclassifications(testingFeatures, testingLabels);
-			sse = f.convergence(testingFeatures, testingLabels, 0.05, sse);
+			sse = f.sum_squared_error(testingFeatures, testingLabels);
 
 			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
-			System.out.println("EPOCH " + ": Misclassifications: "
+			System.out.println("EPOCH " + epoch + ": Misclassifications: "
 				+ mis + " / " + testingLabels.rows());
+			++epoch;
+
+			System.out.println("previous: " + previous);
+			System.out.println("sse: " + sse);
+			System.out.println("Convergence = " + 1 + " - " + "(" + previous + "/" + sse + ")");
+			double convergence = Math.abs(1 - (previous / sse));
+			if(convergence < tolerance) {
+				System.out.println("convergence: " + convergence + " < tolerance: " + tolerance);
+				break;
+			}
+			previous = sse;
 		}
 	}
 

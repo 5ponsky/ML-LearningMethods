@@ -2,6 +2,10 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class NeuralNet extends SupervisedLearner {
+  // This number is persistent between epochs
+  // It allows for decreasing learning rates
+  private double learning_scale = 1.0;
+
   protected Vec weights;
   protected Vec gradient;
   protected ArrayList<Layer> layers;
@@ -134,8 +138,7 @@ public class NeuralNet extends SupervisedLearner {
       updateGradient(in);
 
       if(i % batch_size == 0) {
-        double scale_learning = (1.0 / i + 1.0);
-        refineWeights(0.0175 * i);
+        refineWeights(0.0175 * learning_scale);
         if(momentum <= 0)
           gradient.fill(0.0);
         else
@@ -147,6 +150,9 @@ public class NeuralNet extends SupervisedLearner {
         }
       }
     }
+
+    trainingProgress = 0;
+    learning_scale -= 0.000001;
   }
 
 }

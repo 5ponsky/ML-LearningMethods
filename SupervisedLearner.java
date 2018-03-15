@@ -22,10 +22,11 @@ abstract class SupervisedLearner
 	abstract Vec predict(Vec in);
 
 	// Measure SSE against validation and if error does not improve by j => done
-	void convergence(Matrix testFeatures, Matrix testLabels, double threshold, double previous) {
-		double sse = sum_squared_error(testFeatures, testLabels);
+	double convergence(Matrix testFeatures, Matrix testLabels, double previous,
+		SupervisedLearner learner) {
+
+		double sse = sum_squared_error(testFeatures, testLabels, learner);
 		double convergence = 1 - (previous / sse);
-		if(convergence < threshold)
 
 		return sse;
 	}

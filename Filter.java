@@ -105,6 +105,45 @@ public class Filter extends SupervisedLearner {
 		return mis;
   }
 
+  /// overloaded SSE function for use with processed data
+  double sum_squared_error(Matrix features, Matrix labels) {
+    if(features.rows() != labels.rows())
+      throw new IllegalArgumentException("Mismatching number of rows");
+
+    // PreProcess the features
+    Matrix processedTestFeatures = preProcess(features, new Imputer(),
+      new Normalizer(), new NomCat());
+
+    // So in this function we actually need a persistent set of preprocessors
+    // That are trained on labels so we can re-transform them back into
+    // their nominal representation for misclassification
+    Imputer im = new Imputer();
+    Normalizer norm = new Normalizer();
+    NomCat nm = new NomCat();
+    Matrix processedTestLabels = preProcess(labels, im, norm, nm);
+
+    // predict a value and check if it is an accurate prediction
+    double mis = 0;
+    for(int i = 0; i < processedTestFeatures.rows(); i++) {
+      Vec feat = processedTestFeatures.row(i);
+      Vec lab = labels.row(i);
+
+      Vec prediction = nn.predict(feat);
+      Vec out = postProcess(prediction, nm, norm, im);
+
+      // Component-wise comparison of nominal values
+      for(int j = 0; j < lab.size(); ++j) {
+        if(out.get(j) != lab.get(j)) {
+          double blame = (lab.get(j) - prediction.get(j)) * (lab.get(j) - prediction.get(j));
+                    mis = mis + blame;
+        }
+      }
+
+    }
+
+    return mis;
+  }
+
   Vec predict(Vec in) {
     throw new RuntimeException("This class does not use predict!");
   }
