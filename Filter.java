@@ -19,19 +19,17 @@ public class Filter extends SupervisedLearner {
 
   /// process data into a format readily available for training
   void train(Matrix features, Matrix labels, int[] indices, int batch_size, double momentum) {
-    System.out.println("Labels pre: " + labels.cols());
     features.copy(preProcess(features, new Imputer(),
         new Normalizer(), new NomCat()));
     labels.copy(preProcess(labels, new Imputer(),
         new Normalizer(), new NomCat()));
-    System.out.println("Labels post: " + labels.cols());
   }
 
   /// Train the NeuralNet
   void trainNeuralNet(Matrix features, Matrix labels, int[] indices, int batch_size,
     double momentum) {
     nn.train(features, labels, indices, batch_size, momentum);
-    scrambleIndices(random, indices, null);
+    //scrambleIndices(random, indices, null);
   }
 
   Matrix preProcess(Matrix data, Imputer im, Normalizer norm, NomCat nm) {

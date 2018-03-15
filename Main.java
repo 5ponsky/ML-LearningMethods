@@ -3,6 +3,7 @@
 // See http://creativecommons.org/publicdomain/zero/1.0/
 // ----------------------------------------------------------------
 import java.util.Random;
+import java.lang.*;
 
 class Main
 {
@@ -255,6 +256,7 @@ class Main
 
 		// Train the preprocessors for the training data
 		f.train(trainingFeatures, trainingLabels, null, 0, 0.0);
+		f.train(testingFeatures, testingLabels, null, 0, 0.0);
 
 		/// I want some intelligent way of getting the input and outputs
 		f.nn.layers.add(new LayerLinear(trainingFeatures.cols(), 100));
@@ -267,28 +269,69 @@ class Main
 
 		int mis = testingLabels.rows();
 		int epoch = 0;
-		double sse = 1;
+
+		double testSSE = 0;
+		double trainSSE = 0;
+
 		double previous = 0;
-		double tolerance = 0.00003;
+		double tolerance = 0.003;
+
+
+		System.out.println("batch,seconds,testRMSE,trainRMSE");
+		int pattern = 1;
+		int batch_size = trainingFeatures.rows();
 		while(true) {
-			mis = f.countMisclassifications(testingFeatures, testingLabels);
-			sse = f.sum_squared_error(testingFeatures, testingLabels);
+			double seconds = (double)System.nanoTime() * 1e9;
 
-			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
-			System.out.println("EPOCH " + epoch + ": Misclassifications: "
-				+ mis + " / " + testingLabels.rows());
-			++epoch;
+			testSSE += f.sum_squared_error(testingFeatures, testingLabels);
+			double testMSE = testSSE / pattern;
+			double testRMSE = Math.sqrt(testMSE);
 
-			System.out.println("previous: " + previous);
-			System.out.println("sse: " + sse);
-			System.out.println("Convergence = " + 1 + " - " + "(" + previous + "/" + sse + ")");
-			double convergence = Math.abs(1 - (previous / sse));
-			if(convergence < tolerance) {
-				System.out.println("convergence: " + convergence + " < tolerance: " + tolerance);
-				break;
-			}
-			previous = sse;
+			trainSSE += f.sum_squared_error(trainingFeatures, trainingLabels);
+			double trainMSE = trainSSE / pattern;
+			double trainRMSE = Math.sqrt(trainMSE);
+
+			System.out.println(pattern + "," + seconds + "," + testRMSE + "," + trainRMSE);
+
+			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, batch_size, 0.0);
+			// double mse = sse / pattern;
+			// double rmse = Math.sqrt(mse);
+			pattern = pattern + 1;
+
+			// mis = f.countMisclassifications(testingFeatures, testingLabels);
+			// System.out.println("mis: " + mis);
+
+			double convergence = Math.abs(1 - (previous / testSSE));
+			previous = testSSE;
+			if(convergence < tolerance) break;
 		}
+
+
+
+
+
+
+		// while(true) {
+		// 	sse = f.sum_squared_error(testingFeatures, testingLabels);
+		//
+		// 	f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, 1, 0.0);
+		// 	if(f.nn.trainingProgress % trainingFeatures.rows() == 0) {
+		// 		// mis = f.countMisclassifications(testingFeatures, testingLabels);
+		// 		// System.out.println("EPOCH " + epoch + ": Misclassifications: "
+		// 		// 	+ mis + " / " + testingLabels.rows());
+		// 		// ++epoch;
+		// 	}
+		//
+		// 	// System.out.println("previous: " + previous);
+		// 	// System.out.println("sse: " + sse);
+		// 	// System.out.println("Convergence = " + 1 + " - " + "(" + previous + "/" + sse + ")");
+		// 	double convergence = Math.abs(1 - (previous / sse));
+		// 	if(convergence < tolerance) {
+		// 		System.out.println("convergence: " + convergence + " < tolerance: " + tolerance);
+		// 		break;
+		// 	}
+		// 	previous = sse;
+		// }
 	}
 
 	public static void main(String[] args)

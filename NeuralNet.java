@@ -5,6 +5,9 @@ public class NeuralNet extends SupervisedLearner {
   // This number is persistent between epochs
   // It allows for decreasing learning rates
   private double learning_scale = 1.0;
+  private double learning_rate = 0.000175;
+
+  protected int trainingProgress;
 
   protected Vec weights;
   protected Vec gradient;
@@ -14,7 +17,6 @@ public class NeuralNet extends SupervisedLearner {
   // I need to be able to pause the training at any moment to test the net,
   // But resume exactly where I left off.  I didn't choose to pass as a parameter,
   // Because Idk if I want to change every supervised learner yet.
-  public int trainingProgress;
 
 
   String name() { return ""; }
@@ -126,33 +128,45 @@ public class NeuralNet extends SupervisedLearner {
       throw new IllegalArgumentException("Batch Size is invalid!");
 
     // How many patterns/mini-batches should we train on before testing?
-    int cutoff = 1;
+    final int cutoff = 1;
 
     Vec in, target;
-    for(int i = 0; i < features.rows(); ++i) {
-      in = features.row(indices[i]);
-      target = labels.row(indices[i]);
+    // We want to check if we have iterated over all rows
+    for(; trainingProgress < features.rows(); ++trainingProgress) {
+      in = features.row(indices[trainingProgress]);
+      target = labels.row(indices[trainingProgress]);
 
       predict(in);
       backProp(target);
       updateGradient(in);
 
-      if(i % batch_size == 0) {
-        refineWeights(0.0175 * learning_scale);
+      if((trainingProgress + 1) % batch_size == 0) {
+        refineWeights(learning_rate * learning_scale);
         if(momentum <= 0)
           gradient.fill(0.0);
         else
           gradient.scale(momentum);
 
-        if(i % cutoff == 0) {
-          trainingProgress = i;
+        // Cut off for intra-training testing
+        if(((trainingProgress + 1) / batch_size) % cutoff == 0) {
+          ++trainingProgress;
           break;
         }
       }
     }
 
-    trainingProgress = 0;
-    learning_scale -= 0.000001;
+
+    // if We have trained over the entire given set
+    if(trainingProgress >= features.rows()) {
+      trainingProgress = 0;
+
+      // Decrease learning rate
+      if(learning_rate > 0)
+        learning_scale -= 0.000001;
+
+      scrambleIndices(random, indices, null);
+    }
+
   }
 
 }
