@@ -222,11 +222,11 @@ class Main
 		Random random = new Random(123456);
 
 		/// Load data
-		Matrix derp = new Matrix();
-		derp.loadARFF("data/hypothyroid.arff");
+		Matrix data = new Matrix();
+		data.loadARFF("data/hypothyroid.arff");
 
-		Matrix data = new Matrix(5, derp.cols());
-		data.copyBlock(0, 0, data, 0, 0, 5, data.cols());
+		// Matrix data = new Matrix(5, derp.cols());
+		// data.copyBlock(0, 0, derp, 0, 0, 5, data.cols());
 
 		/// Create a new filter to preprocess our data
 		Filter f = new Filter(random);
@@ -310,44 +310,6 @@ class Main
 			if(convergence < tolerance) break;
 		}
 
-	}
-
-	public static void newTest() {
-		Random random = new Random(123456);
-
-		/// Load data
-		Matrix data = new Matrix();
-		data.loadARFF("data/hypothyroid.arff");
-
-		Matrix sample = new Matrix(5, data.cols());
-		sample.copyBlock(0, 0, data, 0, 0, 5, data.cols());
-
-		/// Create a new filter to preprocess our data
-		Filter f = new Filter(random);
-
-		/// Partition the features from the labels
-		Matrix features = new Matrix();
-		Matrix labels = new Matrix();
-		f.splitLabels(sample, features, labels);
-
-		// PreProcess the data
-
-		// Train the preprocessors for the training data
-		f.train(features, labels, null, 0, 0.0);
-
-		/// Partition the data into training and testing blocks
-		/// With respective feature and labels blocks
-		double splitRatio = 0.75;
-		Matrix trainingFeatures = new Matrix();
-		Matrix trainingLabels = new Matrix();
-		Matrix testingFeatures = new Matrix();
-		Matrix testingLabels = new Matrix();
-		f.splitData(features, labels, trainingFeatures, trainingLabels,
-			testingFeatures, testingLabels, 5, 0);
-
-		System.out.println(trainingFeatures);
-		System.out.println("----");
-		System.out.println(testingFeatures);
 	}
 
 	public static void main(String[] args)

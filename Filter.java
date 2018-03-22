@@ -134,12 +134,11 @@ public class Filter extends SupervisedLearner {
       Vec lab = labels.row(i);
 
       Vec prediction = nn.predict(feat);
-      System.out.println(prediction);
-      Vec out = postProcess(prediction, lnm, lnorm, lim);
+      //Vec out = postProcess(prediction, lnm, lnorm, lim);
 
       // Component-wise comparison of nominal values
       for(int j = 0; j < lab.size(); ++j) {
-        if(out.get(j) != lab.get(j)) {
+        if(prediction.get(j) != lab.get(j)) {
           double blame = (lab.get(j) - prediction.get(j)) * (lab.get(j) - prediction.get(j));
                     mis = mis + blame;
         }
