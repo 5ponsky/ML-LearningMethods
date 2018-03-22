@@ -278,15 +278,14 @@ class Main
 		double trainSSE = 0;
 
 		double previous = 0;
-		double tolerance = 0.003;
+		double tolerance = 0.0000009;
 
 
 		System.out.println("batch,seconds,testRMSE,trainRMSE");
 		int batch = 1;
-		int batch_size = 1;
-		//double seconds = 0;
+		int batch_size = 10;
+		double startTime = (double)System.nanoTime();
 		while(true) {
-			double seconds = (double)System.nanoTime() * 1e9;
 
 			testSSE += f.sum_squared_error(testingFeatures, testingLabels);
 			double testMSE = testSSE / testingFeatures.rows();
@@ -296,11 +295,13 @@ class Main
 			double trainMSE = trainSSE / trainingFeatures.rows();
 			double trainRMSE = Math.sqrt(trainMSE);
 
-			System.out.println(batch + "," + seconds + "," + testRMSE + "," + trainRMSE);
-
 			f.trainNeuralNet(trainingFeatures, trainingLabels, trainingIndices, batch_size, 0.0);
 			// double mse = sse / batch;
 			// double rmse = Math.sqrt(mse);
+
+			double seconds = ((double)System.nanoTime() - startTime) / 1e9;
+			System.out.println(batch + "," + seconds + "," + testRMSE + "," + trainRMSE);
+
 			batch = batch + 1;
 
 			// mis = f.countMisclassifications(testingFeatures, testingLabels);
@@ -311,6 +312,7 @@ class Main
 			testSSE = 0;
 			trainSSE = 0;
 			if(convergence < tolerance) break;
+
 		}
 
 	}
