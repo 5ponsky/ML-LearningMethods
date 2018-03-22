@@ -5,7 +5,7 @@ public class NeuralNet extends SupervisedLearner {
   // This number is persistent between epochs
   // It allows for decreasing learning rates
   private double learning_scale = 1.0;
-  private double learning_rate = 0.000175;
+  private double learning_rate = 0.0175;
 
   protected int trainingProgress;
 
